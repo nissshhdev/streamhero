@@ -37,10 +37,10 @@ Developed by **Nishant**.
 - npm
 
 ### Installation
-
+s
 1. Clone repository:
 ```bash
-git clone https://github.com/your-username/streamhero.git
+git clone https://github.com/nissshhdev/streamhero
 cd streamhero
 ```
 
