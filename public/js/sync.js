@@ -173,15 +173,24 @@ class SyncEngine {
     });
   }
 
-  // Join a Room
-  joinRoom(roomId, userName, userAvatar, callback) {
-    this.roomId = (roomId || 'MAIN').trim().toUpperCase();
-    this.socket.emit('join-room', { roomId: this.roomId, userName, userAvatar }, (res) => {
+  // Join or Create a Room with Key Authentication
+  joinRoom(roomId, userName, userAvatar, passkey = '', hostKey = '', callback) {
+    this.roomId = (roomId || '').trim().toUpperCase();
+    this.socket.emit('join-room', { 
+      roomId: this.roomId, 
+      userName, 
+      userAvatar,
+      passkey,
+      hostKey
+    }, (res) => {
       if (res && res.success) {
+        this.roomId = res.roomId || this.roomId;
         this.roomState = res.roomState;
         this.memberInfo = res.myMemberInfo;
         this.startPeriodicSync();
         if (typeof callback === 'function') callback(res);
+      } else {
+        if (typeof callback === 'function') callback(res || { success: false, error: 'Connection error' });
       }
     });
   }

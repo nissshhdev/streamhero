@@ -233,8 +233,18 @@ document.addEventListener('DOMContentLoaded', () => {
   const joinLobbyForm = document.getElementById('joinLobbyForm');
   const inputUserName = document.getElementById('inputUserName');
   const inputRoomCode = document.getElementById('inputRoomCode');
+  const inputRoomPasskey = document.getElementById('inputRoomPasskey');
+  const btnRandomRoomCode = document.getElementById('btnRandomRoomCode');
+  const tabModeCreate = document.getElementById('tabModeCreate');
+  const tabModeJoin = document.getElementById('tabModeJoin');
+  const btnJoinRoomText = document.getElementById('btnJoinRoomText');
+  const lblRoomCode = document.getElementById('lblRoomCode');
+  const roomCodeRequirement = document.getElementById('roomCodeRequirement');
   const btnAvatarPicker = document.getElementById('btnAvatarPicker');
   const avatarSelectorGrid = document.getElementById('avatarSelectorGrid');
+
+  let lobbyMode = 'create';
+  let activeRoomPasskey = '';
 
   // Instructions Modal & Button
   const modalInstructions = document.getElementById('modalInstructions');
@@ -414,31 +424,88 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // Helper: Generate Unique Room Code
+  function generateRandomRoomCode() {
+    return 'HERO-' + Math.floor(1000 + Math.random() * 9000);
+  }
+
   // 2. Fetch Network Info & URL query params
   function loadNetworkInfo(roomId) {
-    fetch(`/api/network-info?roomId=${encodeURIComponent(roomId)}`)
+    const activeRoom = roomId || currentRoomId || 'MAIN';
+    // Construct clean web share link
+    const webOrigin = window.location.origin;
+    let webJoinUrl = `${webOrigin}/?room=${encodeURIComponent(activeRoom)}`;
+    if (activeRoomPasskey) {
+      webJoinUrl += `&key=${encodeURIComponent(activeRoomPasskey)}`;
+    }
+
+    lanNetworkUrl = webJoinUrl;
+    if (inputShareUrl) inputShareUrl.value = webJoinUrl;
+    if (settingsLanUrlDisplay) settingsLanUrlDisplay.textContent = webJoinUrl;
+    if (networkIpDisplay) networkIpDisplay.textContent = 'Live & Online';
+
+    fetch(`/api/network-info?roomId=${encodeURIComponent(activeRoom)}`)
       .then(res => res.json())
       .then(data => {
-        lanNetworkUrl = data.joinUrl;
-        if (networkIpDisplay) networkIpDisplay.textContent = `LAN: ${data.primaryIp}:3000`;
-        if (qrCodeImage) qrCodeImage.src = data.qrDataUrl;
-        if (inputShareUrl) inputShareUrl.value = data.joinUrl;
-        if (settingsLanUrlDisplay) settingsLanUrlDisplay.textContent = data.joinUrl;
+        if (qrCodeImage && data.qrDataUrl) {
+          qrCodeImage.src = data.qrDataUrl;
+        }
       })
       .catch(err => {
-        console.warn('Network info error:', err);
+        console.warn('Network QR info error:', err);
       });
   }
 
-  // Check URL param ?room=
+  // Mode Switcher (Create vs Join)
+  function setLobbyMode(mode) {
+    lobbyMode = mode;
+    if (mode === 'create') {
+      if (tabModeCreate) tabModeCreate.classList.add('active');
+      if (tabModeJoin) tabModeJoin.classList.remove('active');
+      if (btnJoinRoomText) btnJoinRoomText.textContent = 'Create & Start Party';
+      if (lblRoomCode) lblRoomCode.textContent = 'Party Room Code';
+      if (roomCodeRequirement) roomCodeRequirement.textContent = 'Auto-generated unique room code. Share this code with friends.';
+      if (btnRandomRoomCode) btnRandomRoomCode.classList.remove('hidden');
+      if (!inputRoomCode.value || inputRoomCode.value === 'MAIN') {
+        inputRoomCode.value = generateRandomRoomCode();
+      }
+    } else {
+      if (tabModeJoin) tabModeJoin.classList.add('active');
+      if (tabModeCreate) tabModeCreate.classList.remove('active');
+      if (btnJoinRoomText) btnJoinRoomText.textContent = 'Join Watch Party';
+      if (lblRoomCode) lblRoomCode.textContent = 'Party Room Code';
+      if (roomCodeRequirement) roomCodeRequirement.textContent = 'Enter the Room Code shared by your host.';
+      if (btnRandomRoomCode) btnRandomRoomCode.classList.add('hidden');
+    }
+  }
+
+  if (tabModeCreate) tabModeCreate.addEventListener('click', () => setLobbyMode('create'));
+  if (tabModeJoin) tabModeJoin.addEventListener('click', () => setLobbyMode('join'));
+  if (btnRandomRoomCode) {
+    btnRandomRoomCode.addEventListener('click', () => {
+      inputRoomCode.value = generateRandomRoomCode();
+      inputRoomCode.focus();
+    });
+  }
+
+  // Check URL params ?room= and ?key=
   const urlParams = new URLSearchParams(window.location.search);
   const paramRoom = urlParams.get('room');
+  const paramKey = urlParams.get('key');
   if (paramRoom) {
     inputRoomCode.value = paramRoom.toUpperCase();
     currentRoomId = paramRoom.toUpperCase();
+    setLobbyMode('join');
+  } else {
+    inputRoomCode.value = generateRandomRoomCode();
+    setLobbyMode('create');
+  }
+  if (paramKey && inputRoomPasskey) {
+    inputRoomPasskey.value = paramKey;
+    activeRoomPasskey = paramKey;
   }
 
-  loadNetworkInfo(currentRoomId);
+  loadNetworkInfo(currentRoomId || inputRoomCode.value);
 
   // 3. Avatar Picker Logic
   if (btnAvatarPicker) {
@@ -459,14 +526,26 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // 4. Lobby Join Room Form
+  // 4. Lobby Join / Create Room Form
   if (joinLobbyForm) {
     joinLobbyForm.addEventListener('submit', (e) => {
       e.preventDefault();
       const userName = inputUserName.value.trim() || 'Viewer';
-      currentRoomId = (inputRoomCode.value.trim() || 'MAIN').toUpperCase();
+      currentRoomId = (inputRoomCode.value.trim() || generateRandomRoomCode()).toUpperCase();
+      const passkey = inputRoomPasskey ? inputRoomPasskey.value.trim() : '';
+      activeRoomPasskey = passkey;
 
-      sync.joinRoom(currentRoomId, userName, selectedAvatar, (res) => {
+      sync.joinRoom(currentRoomId, userName, selectedAvatar, passkey, '', (res) => {
+        if (!res || !res.success) {
+          showToast(res?.error || 'Failed to join party. Check passkey.', 'error');
+          if (inputRoomPasskey) {
+            inputRoomPasskey.focus();
+            inputRoomPasskey.classList.add('cds--input-error');
+            setTimeout(() => inputRoomPasskey.classList.remove('cds--input-error'), 2000);
+          }
+          return;
+        }
+
         lobbyView.classList.add('hidden');
         theaterView.classList.remove('hidden');
         navRoomControls.classList.remove('hidden');
@@ -474,6 +553,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const newUrl = new URL(window.location.href);
         newUrl.searchParams.set('room', currentRoomId);
+        if (passkey) {
+          newUrl.searchParams.set('key', passkey);
+        } else {
+          newUrl.searchParams.delete('key');
+        }
         window.history.pushState({}, '', newUrl);
 
         loadNetworkInfo(currentRoomId);
@@ -486,7 +570,8 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         }
 
-        showToast(`Joined party room ${currentRoomId}`, 'success');
+        const roleText = res.myMemberInfo?.isHost ? '👑 Host' : 'Viewer';
+        showToast(`Joined party room ${currentRoomId} (${roleText})`, 'success');
       });
     });
   }

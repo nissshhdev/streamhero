@@ -356,6 +356,8 @@ function getRoom(roomId) {
       hostId: null,
       hostName: '',
       hostOnlyControls: false,
+      passkey: null, // Room Access Key / Password
+      hostKey: null, // Master Host Admin Token
       video: null, // { url, name, size, duration, subtitleUrl }
       playback: {
         isPlaying: false,
@@ -364,7 +366,8 @@ function getRoom(roomId) {
         playbackRate: 1.0
       },
       members: new Map(), // socketId -> { id, name, avatar, isHost, joinedAt }
-      chatHistory: []
+      chatHistory: [],
+      createdAt: Date.now()
     });
   }
   return rooms.get(roomId);
@@ -384,6 +387,7 @@ function sanitizeRoomState(room) {
     hostId: room.hostId,
     hostName: room.hostName,
     hostOnlyControls: room.hostOnlyControls,
+    isProtected: !!room.passkey,
     video: room.video,
     playback: {
       isPlaying: room.playback.isPlaying,
@@ -407,32 +411,64 @@ io.on('connection', (socket) => {
     }
   });
 
-  // Join or Create Room
-  socket.on('join-room', ({ roomId, userName, userAvatar }, callback) => {
-    roomId = (roomId || 'default').trim().toUpperCase();
-    currentRoomId = roomId;
+  // Join or Create Room with Key Authentication
+  socket.on('join-room', ({ roomId, userName, userAvatar, passkey, hostKey }, callback) => {
+    let targetRoomId = (roomId || '').trim().toUpperCase();
+    if (!targetRoomId) {
+      targetRoomId = 'HERO-' + Math.floor(1000 + Math.random() * 9000);
+    }
+    currentRoomId = targetRoomId;
 
-    const room = getRoom(roomId);
+    const room = getRoom(targetRoomId);
     const isFirstMember = room.members.size === 0;
 
+    // Room Creation / Passkey Setup
     if (isFirstMember) {
       room.hostId = socket.id;
       room.hostName = userName || 'Host';
+      if (passkey && passkey.trim()) {
+        room.passkey = passkey.trim();
+      }
+      room.hostKey = (hostKey && hostKey.trim()) 
+        ? hostKey.trim() 
+        : ('KEY-' + Math.random().toString(36).substring(2, 8).toUpperCase());
+    } else {
+      // Existing Room Authentication Check
+      if (room.passkey) {
+        const cleanPass = (passkey || '').trim();
+        if (cleanPass !== room.passkey) {
+          if (typeof callback === 'function') {
+            return callback({
+              success: false,
+              isProtected: true,
+              error: 'Private Party: Incorrect Room Key / Password. Please enter the correct key to join.'
+            });
+          }
+          return socket.emit('error-msg', 'Private Party: Incorrect Room Key.');
+        }
+      }
+
+      // Reclaim host role if matching hostKey is supplied
+      if (hostKey && hostKey.trim() === room.hostKey) {
+        room.hostId = socket.id;
+        room.hostName = userName || room.hostName;
+      }
     }
 
+    const isHost = room.hostId === socket.id;
     memberInfo = {
       id: socket.id,
-      name: userName || `Viewer ${Math.floor(Math.random() * 1000)}`,
-      avatar: userAvatar || '🍿',
-      isHost: room.hostId === socket.id,
+      name: userName || (isHost ? 'Host' : `Viewer ${Math.floor(Math.random() * 1000)}`),
+      avatar: userAvatar || (isHost ? '👑' : '🍿'),
+      isHost,
       joinedAt: Date.now()
     };
 
     room.members.set(socket.id, memberInfo);
-    socket.join(roomId);
+    socket.join(targetRoomId);
 
     // Notify room of new member
-    io.to(roomId).emit('member-joined', {
+    io.to(targetRoomId).emit('member-joined', {
       member: memberInfo,
       members: Array.from(room.members.values()),
       systemMessage: `${memberInfo.name} joined the party! 🎉`
@@ -442,8 +478,11 @@ io.on('connection', (socket) => {
     if (typeof callback === 'function') {
       callback({
         success: true,
+        roomId: targetRoomId,
         roomState: sanitizeRoomState(room),
-        myMemberInfo: memberInfo
+        myMemberInfo: memberInfo,
+        hostKey: isHost ? room.hostKey : null,
+        isProtected: !!room.passkey
       });
     }
   });
