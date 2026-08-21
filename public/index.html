@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StreamHero — Synchronized Watch Party</title>
+  <meta name="description"
+    content="StreamHero — Minimal synchronized video streaming across local Wi-Fi and LAN / Developed by Nishant">
+
+  <!-- IBM Plex Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M12 2L21.5 7.5V16.5L12 22L2.5 16.5V7.5L12 2Z' stroke='%233cffd1' stroke-width='2' fill='%23061a15'/%3E%3Cpath d='M10 8.5L16 12L10 15.5V8.5Z' fill='%233cffd1'/%3E%3C/svg%3E">
+
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="/socket.io/socket.io.js"></script>
+  <!-- YouTube IFrame API -->
+  <script src="https://www.youtube.com/iframe_api"></script>
+</head>
+
+<body class="cds--theme-white">
+  <!-- Main App Shell -->
+  <div id="app" class="cds--app-shell">
+
+    <!-- Top Carbon Global Header -->
+    <header class="cds--header" id="mainNavbar">
+      <div class="cds--header__brand">
+        <span class="cds--header__logo">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="heroGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#3cffd1"/>
+                <stop offset="1" stop-color="#00a383"/>
+              </linearGradient>
+            </defs>
+            <path d="M12 2L21.5 7.5V16.5L12 22L2.5 16.5V7.5L12 2Z" stroke="url(#heroGrad)" stroke-width="2" stroke-linejoin="round" fill="rgba(60, 255, 209, 0.12)"/>
+            <path d="M10 8.5L16 12L10 15.5V8.5Z" fill="#3cffd1"/>
+          </svg>
+        </span>
+        <span class="cds--header__name">Stream<strong>Hero</strong></span>
+        <span class="cds--author-tag">by Nishant</span>
+        <span class="cds--header__badge">LAN & Sync</span>
+      </div>
+
+      <!-- In-Room Navigation Controls -->
+      <div class="cds--header__actions hidden" id="navRoomControls">
+        <!-- Home / Leave Party Button -->
+        <button class="cds--btn cds--btn--ghost" id="btnHome" title="Leave Party & Go to Home">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+            <path
+              d="M8.707 1.5a1 1 0 0 0-1.414 0L.646 8.146a.5.5 0 0 0 .708.708L2 8.207V13.5A1.5 1.5 0 0 0 3.5 15h9a1.5 1.5 0 0 0 1.5-1.5V8.207l.646.647a.5.5 0 0 0 .708-.708L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293L8.707 1.5zM13 7.207V13.5a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5V7.207l5-5 5 5z" />
+          </svg>
+          <span>Home</span>
+        </button>
+
+        <div class="cds--room-tag" id="roomCodeBadge" title="Click to copy Room Link">
+          <span class="cds--tag-label">ROOM</span>
+          <span class="cds--tag-value" id="navRoomCode">MAIN</span>
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
+            <path
+              d="M4 2a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H4zm0 1h8a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z" />
+          </svg>
+        </div>
+
+        <button class="cds--btn cds--btn--secondary" id="btnShareParty">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+            <path
+              d="M1 2.5A1.5 1.5 0 0 1 2.5 1h3A1.5 1.5 0 0 1 7 2.5v3A1.5 1.5 0 0 1 5.5 7h-3A1.5 1.5 0 0 1 1 5.5v-3zm8 0A1.5 1.5 0 0 1 10.5 1h3A1.5 1.5 0 0 1 15 2.5v3a1.5 1.5 0 0 1-1.5 1.5h-3A1.5 1.5 0 0 1 9 5.5v-3zm0 8a1.5 1.5 0 0 1 1.5-1.5h3a1.5 1.5 0 0 1 1.5 1.5v3a1.5 1.5 0 0 1-1.5 1.5h-3A1.5 1.5 0 0 1 9 13.5v-3zm-8 0A1.5 1.5 0 0 1 2.5 9h3A1.5 1.5 0 0 1 7 10.5v3A1.5 1.5 0 0 1 5.5 15h-3A1.5 1.5 0 0 1 1 13.5v-3z" />
+          </svg>
+          <span>Share QR</span>
+        </button>
+
+        <button class="cds--btn cds--btn--primary" id="btnUploadModalNav">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+            <path
+              d="M8 1a.5.5 0 0 1 .5.5v8.793l2.146-2.147a.5.5 0 0 1 .708.708l-3 3a.5.5 0 0 1-.708 0l-3-3a.5.5 0 1 1 .708-.708L7.5 10.293V1.5A.5.5 0 0 1 8 1z"
+              transform="rotate(180 8 8)" />
+            <path
+              d="M2 13a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-2a.5.5 0 0 1 1 0v2a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2v-2a.5.5 0 0 1 1 0v2z" />
+          </svg>
+          <span>Upload</span>
+        </button>
+
+        <!-- View Library Button -->
+        <button class="cds--btn cds--btn--secondary" id="btnVideoLibraryNav" title="Open Video Library">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+            <path
+              d="M14 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h12zM2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2z" />
+            <path d="M4 4h8v1H4V4zm0 3h8v1H4V7zm0 3h5v1H4v-1z" />
+          </svg>
+          <span>Library</span>
+        </button>
+
+        <!-- YouTube Stream Button -->
+        <button class="cds--btn cds--btn--secondary" id="btnYouTubeModalNav" title="Play YouTube Video">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+            <path
+              d="M8.051 1.999h.089c.822.003 4.987.033 6.11.335a2.01 2.01 0 0 1 1.415 1.42c.101.38.172.883.22 1.402l.01.104.022.26.008.104c.065.914.073 1.77.074 1.957v.075c-.001.194-.01 1.108-.082 2.06l-.008.105-.022.26-.01.104c-.048.519-.119 1.023-.22 1.402a2.007 2.007 0 0 1-1.415 1.42c-1.16.312-5.569.334-6.18.335h-.142c-.309 0-1.587-.006-2.927-.052l-.17-.006-.087-.004-.171-.007-.171-.007c-1.11-.049-2.167-.128-2.654-.26a2.007 2.007 0 0 1-1.415-1.419c-.111-.417-.185-.986-.235-1.558L.09 9.82l-.008-.104A31.4 31.4 0 0 1 0 7.68v-.123c.002-.215.01-.958.064-1.778l.007-.103.003-.052.008-.104.022-.26.01-.104c.048-.519.119-1.023.22-1.402a2.007 2.007 0 0 1 1.415-1.42c.487-.13 1.544-.21 2.654-.26l.17-.007.172-.006.086-.003.171-.007A99.788 99.788 0 0 1 7.858 2h.193zM6.4 5.209v5.582l4.88-2.791L6.4 5.209z" />
+          </svg>
+          <span>YouTube</span>
+        </button>
+
+        <button class="cds--btn cds--btn--ghost cds--btn--icon-only mobile-only" id="btnToggleSidebarMobile"
+          title="Toggle Chat">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+            <path d="M14 1H2a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h2v3.5L7.5 12H14a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1z" />
+          </svg>
+          <span class="cds--unread-dot hidden" id="chatUnreadDot"></span>
+        </button>
+      </div>
+
+      <!-- Right Header Group: Theme Toggle & Network Status -->
+      <div class="cds--header__right">
+        <!-- Dark / Light Mode Toggle Button -->
+        <button class="cds--btn cds--btn--ghost cds--btn--icon-only" id="btnThemeToggle"
+          title="Toggle Light / Dark Theme">
+          <span id="themeToggleIcon">🌙</span>
+        </button>
+
+        <div class="cds--header__status">
+          <span class="cds--status-indicator" id="serverStatusDot"></span>
+          <span class="cds--status-text" id="networkIpDisplay">LAN Ready</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Lobby View -->
+    <main class="cds--lobby-view" id="lobbyView">
+      <!-- Interactive Animated Constellation Background Canvas -->
+      <canvas id="lobbyBgCanvas" class="cds--lobby-bg-canvas"></canvas>
+
+      <div class="cds--lobby-panel">
+        <div class="cds--lobby-panel__header">
+          <div class="cds--tag cds--tag--blue">StreamHero &bull; by Nishant</div>
+          <h1 class="cds--heading-04">StreamHero Watch Party</h1>
+          <p class="cds--body-01">Upload once or stream YouTube synchronously with zero delay over the local network.</p>
+        </div>
+
+        <form class="cds--form" id="joinLobbyForm">
+          <div class="cds--form-item">
+            <label class="cds--label" for="inputUserName">Viewer Nickname</label>
+            <div class="cds--text-input-wrapper">
+              <input type="text" id="inputUserName" class="cds--text-input" placeholder="e.g. Alex, Host" maxlength="20"
+                required autofocus>
+              <button type="button" class="cds--avatar-btn" id="btnAvatarPicker" title="Select Avatar">🍿</button>
+            </div>
+          </div>
+
+          <!-- Carbon Emoji Matrix -->
+          <div class="cds--avatar-grid hidden" id="avatarSelectorGrid">
+            <div class="cds--avatar-cell selected" data-avatar="🍿">🍿</div>
+            <div class="cds--avatar-cell" data-avatar="🎬">🎬</div>
+            <div class="cds--avatar-cell" data-avatar="🍕">🍕</div>
+            <div class="cds--avatar-cell" data-avatar="🚀">🚀</div>
+            <div class="cds--avatar-cell" data-avatar="🐱">🐱</div>
+            <div class="cds--avatar-cell" data-avatar="🎧">🎧</div>
+            <div class="cds--avatar-cell" data-avatar="🎮">🎮</div>
+            <div class="cds--avatar-cell" data-avatar="⚡">⚡</div>
+            <div class="cds--avatar-cell" data-avatar="🦊">🦊</div>
+            <div class="cds--avatar-cell" data-avatar="👾">👾</div>
+          </div>
+
+          <div class="cds--form-item">
+            <label class="cds--label" for="inputRoomCode">Party Room Code</label>
+            <input type="text" id="inputRoomCode" class="cds--text-input cds--font-mono" placeholder="MAIN" value="MAIN"
+              maxlength="12" required>
+            <div class="cds--form-requirement">Default is MAIN. Enter any code to isolate your party.</div>
+          </div>
+
+          <div class="cds--form-item">
+            <button type="submit" class="cds--btn cds--btn--primary cds--btn--full" id="btnJoinRoom">
+              <span>Join Watch Party</span>
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                <path d="M6 3l5 5-5 5V3z" />
+              </svg>
+            </button>
+          </div>
+        </form>
+
+        <div class="cds--grid-specs">
+          <div class="cds--spec-item">
+            <div class="cds--spec-title">HTTP 206 Streaming</div>
+            <div class="cds--spec-desc">Sub-second range seeking for high bitrate files</div>
+          </div>
+          <div class="cds--spec-item">
+            <div class="cds--spec-title">Zero Configuration</div>
+            <div class="cds--spec-desc">Automatic IPv4 LAN discovery & QR sync</div>
+          </div>
+          <div class="cds--spec-item">
+            <div class="cds--spec-title">Drift Compensation</div>
+            <div class="cds--spec-desc">NTP clock sync with sub-500ms auto adjustment</div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Theater View -->
+    <main class="cds--theater-view hidden" id="theaterView">
+
+      <!-- Video Stage -->
+      <section class="cds--stage" id="theaterStage">
+        <div class="cds--video-container" id="videoContainer">
+
+          <!-- Ambient Canvas -->
+          <canvas id="ambientCanvas" class="cds--ambient-canvas"></canvas>
+
+          <!-- Main Video Element -->
+          <video id="mainVideo" class="cds--main-video" playsinline preload="metadata">
+            <p>Your browser does not support HTML5 video streaming.</p>
+          </video>
+
+          <!-- YouTube IFrame Player Container -->
+          <div id="youtubePlayer" class="cds--youtube-player hidden"></div>
+
+          <!-- Synchronized Secondary Language Audio Track Element -->
+          <audio id="secondaryAudio" class="hidden" preload="auto"></audio>
+          <input type="file" id="audioFileInput" accept="audio/*,.mp3,.aac,.m4a,.wav,.ogg" class="cds--hidden-file">
+
+          <!-- Floating Emojis Overlay -->
+          <div id="reactionsContainer" class="cds--reactions-overlay"></div>
+
+          <!-- Play/Pause Center Cue -->
+          <div class="cds--play-cue hidden" id="playStateCue">
+            <div class="cds--cue-box">
+              <svg class="play-cue" width="28" height="28" viewBox="0 0 16 16" fill="currentColor">
+                <path d="M4 2.5v11l9-5.5-9-5.5z" />
+              </svg>
+              <svg class="pause-cue hidden" width="28" height="28" viewBox="0 0 16 16" fill="currentColor">
+                <path d="M3.5 2h3v12h-3V2zm6 0h3v12h-3V2z" />
+              </svg>
+            </div>
+          </div>
+
+          <!-- Empty State (Upload / YouTube Prompt) -->
+          <div class="cds--empty-state" id="emptyPlayerState">
+            <div class="cds--empty-card">
+              <div class="cds--empty-icon">
+                <svg width="40" height="40" viewBox="0 0 16 16" fill="currentColor">
+                  <path
+                    d="M0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2zm2-1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H2z" />
+                  <path
+                    d="M8 4a.5.5 0 0 1 .5.5v5.793l2.146-2.147a.5.5 0 0 1 .708.708l-3 3a.5.5 0 0 1-.708 0l-3-3a.5.5 0 1 1 .708-.708L7.5 10.293V4.5A.5.5 0 0 1 8 4z"
+                    transform="rotate(180 8 7)" />
+                </svg>
+              </div>
+              <h2 class="cds--heading-03">No Video Loaded</h2>
+              <p class="cds--body-02">Upload a local video file, stream from the server library, or paste a YouTube URL
+                to watch together.</p>
+
+              <div class="cds--empty-actions">
+                <button class="cds--btn cds--btn--primary" id="btnUploadModalEmpty">
+                  <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+                    <path
+                      d="M8 1a.5.5 0 0 1 .5.5v8.793l2.146-2.147a.5.5 0 0 1 .708.708l-3 3a.5.5 0 0 1-.708 0l-3-3a.5.5 0 1 1 .708-.708L7.5 10.293V1.5A.5.5 0 0 1 8 1z"
+                      transform="rotate(180 8 8)" />
+                    <path
+                      d="M2 13a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-2a.5.5 0 0 1 1 0v2a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2v-2a.5.5 0 0 1 1 0v2z" />
+                  </svg>
+                  <span>Select & Upload Video</span>
+                </button>
+                <button class="cds--btn cds--btn--secondary" id="btnYouTubeModalEmpty">
+                  <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+                    <path
+                      d="M8.051 1.999h.089c.822.003 4.987.033 6.11.335a2.01 2.01 0 0 1 1.415 1.42c.101.38.172.883.22 1.402l.01.104.022.26.008.104c.065.914.073 1.77.074 1.957v.075c-.001.194-.01 1.108-.082 2.06l-.008.105-.022.26-.01.104c-.048.519-.119 1.023-.22 1.402a2.007 2.007 0 0 1-1.415 1.42c-1.16.312-5.569.334-6.18.335h-.142c-.309 0-1.587-.006-2.927-.052l-.17-.006-.087-.004-.171-.007-.171-.007c-1.11-.049-2.167-.128-2.654-.26a2.007 2.007 0 0 1-1.415-1.419c-.111-.417-.185-.986-.235-1.558L.09 9.82l-.008-.104A31.4 31.4 0 0 1 0 7.68v-.123c.002-.215.01-.958.064-1.778l.007-.103.003-.052.008-.104.022-.26.01-.104c.048-.519.119-1.023.22-1.402a2.007 2.007 0 0 1 1.415-1.42c.487-.13 1.544-.21 2.654-.26l.17-.007.172-.006.086-.003.171-.007A99.788 99.788 0 0 1 7.858 2h.193zM6.4 5.209v5.582l4.88-2.791L6.4 5.209z" />
+                  </svg>
+                  <span>Stream YouTube Video</span>
+                </button>
+                <button class="cds--btn cds--btn--tertiary" id="btnBrowseLibraryEmpty">
+                  <span>Browse Server Library</span>
+                </button>
+                <button class="cds--btn cds--btn--ghost cds--btn--sm" id="btnLoadDemoVideo">
+                  <span>Load Sample Demo Video</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Video Buffer Spinner -->
+          <div class="cds--buffer-loader hidden" id="videoBufferSpinner">
+            <div class="cds--spinner"></div>
+            <span>Buffering stream...</span>
+          </div>
+
+          <!-- Video Controls Overlay -->
+          <div class="cds--controls" id="playerControlsOverlay">
+            <!-- Top bar -->
+            <div class="cds--controls__top">
+              <div class="cds--title-display">
+                <span class="cds--tag cds--tag--sm">STREAM</span>
+                <span class="cds--title-text" id="videoActiveTitle">No Video Loaded</span>
+              </div>
+              <div class="cds--sync-badge" id="videoSyncStatus">
+                <span class="sync-dot in-sync"></span>
+                <span class="sync-text">Synchronized</span>
+              </div>
+            </div>
+
+            <!-- Bottom Controls Wrapper (Timeline + Buttons) -->
+            <div class="cds--controls__bottom-area">
+              <!-- Scrub Timeline -->
+              <div class="cds--timeline" id="timelineContainer">
+                <div class="cds--timeline__tooltip hidden" id="timelineHoverTime">00:00</div>
+                <div class="cds--timeline__track" id="timelineTrack">
+                  <div class="cds--timeline__buffer" id="timelineBuffer"></div>
+                  <div class="cds--timeline__bar" id="timelineProgress"></div>
+                  <div class="cds--timeline__handle" id="timelineThumb"></div>
+                </div>
+              </div>
+
+              <!-- Bottom bar -->
+              <div class="cds--controls__bottom">
+                <div class="cds--controls__group-left">
+                  <button class="cds--ctrl-btn" id="btnPlayPause" title="Play / Pause (Space)">
+                    <svg class="icon-play" width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                      <path d="M4 2.5v11l9-5.5-9-5.5z" />
+                    </svg>
+                    <svg class="icon-pause hidden" width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                      <path d="M3.5 2h3v12h-3V2zm6 0h3v12h-3V2z" />
+                    </svg>
+                  </button>
+
+                  <button class="cds--ctrl-btn" id="btnRewind10" title="Rewind 10s (Left Arrow)">
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+                      <path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.418A6 6 0 1 1 8 2v1z" />
+                      <path d="M8 0v4l3-2-3-2z" />
+                    </svg>
+                    <span class="cds--ctrl-sub">10</span>
+                  </button>
+
+                  <button class="cds--ctrl-btn" id="btnForward10" title="Forward 10s (Right Arrow)">
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+                      <path d="M8 3a5 5 0 1 1-4.546 2.914.5.5 0 0 0-.908-.418A6 6 0 1 0 8 2v1z" />
+                      <path d="M8 0v4l-3-2 3-2z" />
+                    </svg>
+                    <span class="cds--ctrl-sub">10</span>
+                  </button>
+
+                  <div class="cds--volume-wrap">
+                    <button class="cds--ctrl-btn" id="btnVolumeMute" title="Mute / Unmute (M)">
+                      <svg class="icon-vol-high" width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                        <path
+                          d="M11.536 14.01A8.473 8.473 0 0 0 14.026 8a8.473 8.473 0 0 0-2.49-6.01l-.708.707A7.476 7.476 0 0 1 13.025 8c0 2.071-.84 3.946-2.197 5.303l.708.707z" />
+                        <path
+                          d="M6.717 3.55A.5.5 0 0 1 7 4v8a.5.5 0 0 1-.812.39L3.825 10.5H1.5A.5.5 0 0 1 1 10V6a.5.5 0 0 1 .5-.5h2.325l2.363-1.89a.5.5 0 0 1 .529-.06z" />
+                      </svg>
+                      <svg class="icon-vol-mute hidden" width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                        <path
+                          d="M6.717 3.55A.5.5 0 0 1 7 4v8a.5.5 0 0 1-.812.39L3.825 10.5H1.5A.5.5 0 0 1 1 10V6a.5.5 0 0 1 .5-.5h2.325l2.363-1.89a.5.5 0 0 1 .529-.06z" />
+                        <path
+                          d="M10.146 5.146a.5.5 0 0 1 .708 0L12 6.293l1.146-1.147a.5.5 0 0 1 .708.708L12.707 7l1.147 1.146a.5.5 0 0 1-.708.708L12 7.707l-1.146 1.147a.5.5 0 0 1-.708-.708L11.293 7l-1.147-1.146a.5.5 0 0 1 0-.708z" />
+                      </svg>
+                    </button>
+                    <input type="range" class="cds--volume-range" id="volumeSlider" min="0" max="1" step="0.05"
+                      value="1">
+                  </div>
+
+                  <div class="cds--time-stamp cds--font-mono">
+                    <span id="timeCurrent">00:00</span>
+                    <span class="cds--time-div">/</span>
+                    <span id="timeDuration">00:00</span>
+                  </div>
+                </div>
+
+                <div class="cds--controls__group-right">
+                  <!-- Audio Tracks (Language) menu -->
+                  <div class="cds--dropdown-wrap" id="audioTracksDropdownWrap">
+                    <button class="cds--ctrl-btn" id="btnAudioTracksToggle" title="Audio Language / Tracks">
+                      <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor">
+                        <path
+                          d="M11.536 14.01A8.473 8.473 0 0 0 14.026 8a8.473 8.473 0 0 0-2.49-6.01l-.708.707A7.476 7.476 0 0 1 13.025 8c0 2.071-.84 3.946-2.197 5.303l.708.707z" />
+                        <path
+                          d="M8.707 11.182A4.486 4.486 0 0 0 10.025 8a4.486 4.486 0 0 0-1.318-3.182L8 5.525A3.489 3.489 0 0 1 9.025 8 3.49 3.49 0 0 1 8 10.475l.707.707zM6.717 3.55A.5.5 0 0 1 7 4v8a.5.5 0 0 1-.812.39L3.825 10.5H1.5A.5.5 0 0 1 1 10V6a.5.5 0 0 1 .5-.5h2.325l2.363-1.89a.5.5 0 0 1 .529-.06z" />
+                      </svg>
+                    </button>
+                    <div class="cds--menu hidden" id="audioTracksDropdownMenu">
+                      <div class="cds--menu-header">Audio Language</div>
+                      <div id="audioTracksList">
+                        <button class="cds--menu-item active" data-track-index="default">Default Track (Main)</button>
+                      </div>
+                      <button class="cds--menu-item" id="btnAudioUploadOption">+ Attach Audio Track</button>
+                    </div>
+                  </div>
+
+                  <!-- Subtitles menu -->
+                  <div class="cds--dropdown-wrap" id="subtitlesDropdownWrap">
+                    <button class="cds--ctrl-btn" id="btnSubtitlesToggle" title="Subtitles">
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                        <path
+                          d="M2 3h12a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zm1 2v6h10V5H3zm2 4h3v1H5V9zm5 0h1v1h-1V9zm-5-2h6v1H5V7z" />
+                      </svg>
+                    </button>
+                    <div class="cds--menu hidden" id="subtitlesDropdownMenu">
+                      <div class="cds--menu-header">Subtitles</div>
+                      <button class="cds--menu-item active" data-sub="off">Off</button>
+                      <button class="cds--menu-item" id="btnSubUploadOption">+ Upload .SRT / .VTT</button>
+                    </div>
+                  </div>
+
+                  <!-- Speed Menu -->
+                  <div class="cds--dropdown-wrap" id="speedDropdownWrap">
+                    <button class="cds--ctrl-btn cds--font-mono cds--ctrl-text" id="btnSpeedToggle" title="Speed">
+                      <span id="currentSpeedLabel">1.0x</span>
+                    </button>
+                    <div class="cds--menu hidden" id="speedDropdownMenu">
+                      <div class="cds--menu-header">Playback Speed</div>
+                      <button class="cds--menu-item" data-speed="0.5">0.5x</button>
+                      <button class="cds--menu-item" data-speed="0.75">0.75x</button>
+                      <button class="cds--menu-item active" data-speed="1.0">1.0x (Normal)</button>
+                      <button class="cds--menu-item" data-speed="1.25">1.25x</button>
+                      <button class="cds--menu-item" data-speed="1.5">1.5x</button>
+                      <button class="cds--menu-item" data-speed="2.0">2.0x</button>
+                    </div>
+                  </div>
+
+                  <button class="cds--ctrl-btn" id="btnForceSync" title="Force Sync">
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+                      <path
+                        d="M11.534 7h3.932a.25.25 0 0 0 .192-.41l-1.966-2.36a.25.25 0 0 0-.384 0l-1.966 2.36a.25.25 0 0 0 .192.41zm-11 2h3.932a.25.25 0 0 0 .192-.41L2.692 6.23a.25.25 0 0 0-.384 0L.342 8.59A.25.25 0 0 0 .534 9z" />
+                      <path
+                        d="M8 3c-1.552 0-2.94.707-3.857 1.818a.5.5 0 1 1-.771-.636A6 6 0 1 1 2.08 7.563a.5.5 0 1 1 .958.287A5 5 0 1 0 8 3z" />
+                    </svg>
+                  </button>
+
+                  <button class="cds--ctrl-btn" id="btnPip" title="Picture-in-Picture">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                      <path
+                        d="M0 3.5A1.5 1.5 0 0 1 1.5 2h13A1.5 1.5 0 0 1 16 3.5v9a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 0 12.5v-9zM1.5 3a.5.5 0 0 0-.5.5v9a.5.5 0 0 0 .5.5h13a.5.5 0 0 0 .5-.5v-9a.5.5 0 0 0-.5-.5h-13z" />
+                      <path d="M8 8.5A.5.5 0 0 1 8.5 8h6a.5.5 0 0 1 .5.5v4a.5.5 0 0 1-.5.5h-6a.5.5 0 0 1-.5-.5v-4z" />
+                    </svg>
+                  </button>
+
+                  <button class="cds--ctrl-btn" id="btnTheaterMode" title="Toggle Theater View (T)">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                      <path
+                        d="M1 4.5A1.5 1.5 0 0 1 2.5 3h11A1.5 1.5 0 0 1 15 4.5v7a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 1 11.5v-7zM2.5 4a.5.5 0 0 0-.5.5v7a.5.5 0 0 0 .5.5h11a.5.5 0 0 0 .5-.5v-7a.5.5 0 0 0-.5-.5h-11z" />
+                    </svg>
+                  </button>
+
+                  <button class="cds--ctrl-btn" id="btnFullscreen" title="Fullscreen (F)">
+                    <svg class="icon-expand" width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                      <path
+                        d="M1.5 1a.5.5 0 0 0-.5.5v4a.5.5 0 0 1-1 0v-4A1.5 1.5 0 0 1 1.5 0h4a.5.5 0 0 1 0 1h-4zm9.5 0a.5.5 0 0 1 0-1h4A1.5 1.5 0 0 1 16 1.5v4a.5.5 0 0 1-1 0v-4a.5.5 0 0 0-.5-.5h-4zM0 10.5a.5.5 0 0 1 1 0v4a.5.5 0 0 0 .5.5h4a.5.5 0 0 1 0 1h-4A1.5 1.5 0 0 1 0 14.5v-4zm15 0a.5.5 0 0 1 1 0v4a1.5 1.5 0 0 1-1.5 1.5h-4a.5.5 0 0 1 0-1h4a.5.5 0 0 0 .5-.5v-4z" />
+                    </svg>
+                    <svg class="icon-compress hidden" width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                      <path
+                        d="M5.5 0a.5.5 0 0 1 .5.5v4A1.5 1.5 0 0 1 4.5 6h-4a.5.5 0 0 1 0-1h4a.5.5 0 0 0 .5-.5v-4a.5.5 0 0 1 .5-.5zm5 0a.5.5 0 0 1 .5.5v4a.5.5 0 0 0 .5.5h4a.5.5 0 0 1 0 1h-4A1.5 1.5 0 0 1 10.5 4.5v-4a.5.5 0 0 1 .5-.5zM0 10.5a.5.5 0 0 1 .5-.5h4A1.5 1.5 0 0 1 6 11.5v4a.5.5 0 0 1-1 0v-4a.5.5 0 0 0-.5-.5h-4a.5.5 0 0 1-.5-.5zm10.5 1A1.5 1.5 0 0 1 12 10h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 0-.5.5v4a.5.5 0 0 1-1 0v-4z" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+      </section>
+
+      <!-- Sidebar -->
+      <aside class="cds--sidebar" id="theaterSidebar">
+        <!-- Carbon Tab Navigation -->
+        <div class="cds--tabs">
+          <button class="cds--tab active" data-tab="chat" id="tabBtnChat">Live Chat</button>
+          <button class="cds--tab" data-tab="members" id="tabBtnMembers">Viewers (<span
+              id="memberCountBadge">1</span>)</button>
+          <button class="cds--tab" data-tab="settings" id="tabBtnSettings">Settings</button>
+        </div>
+
+        <!-- TAB 1: Chat -->
+        <div class="cds--tab-panel tab-chat active" id="tabContentChat">
+          <div class="cds--chat-stream" id="chatMessagesContainer">
+            <div class="cds--chat-banner">
+              <div class="cds--chat-banner__title">Party Connected</div>
+              <div class="cds--chat-banner__desc">Messages and reactions are broadcast to all participants in real time.
+              </div>
+            </div>
+          </div>
+
+          <!-- Clean Reaction Bar inside Chat Sidebar -->
+          <div class="cds--reaction-strip">
+            <span class="cds--reaction-label">REACTIONS:</span>
+            <div class="cds--reaction-buttons">
+              <button class="cds--btn-rx" data-emoji="🍿" title="Popcorn">🍿</button>
+              <button class="cds--btn-rx" data-emoji="❤️" title="Love">❤️</button>
+              <button class="cds--btn-rx" data-emoji="😂" title="Laugh">😂</button>
+              <button class="cds--btn-rx" data-emoji="🔥" title="Fire">🔥</button>
+              <button class="cds--btn-rx" data-emoji="👏" title="Clap">👏</button>
+              <button class="cds--btn-rx" data-emoji="😱" title="Shocked">😱</button>
+              <button class="cds--btn-rx" data-emoji="🎉" title="Party">🎉</button>
+            </div>
+            <div class="cds--strip-divider"></div>
+            <button class="cds--btn cds--btn--ghost cds--btn--sm" id="btnToggleSoundEffects">
+              <span id="soundIcon">🔊</span>
+              <span>FX</span>
+            </button>
+          </div>
+
+          <form class="cds--chat-form" id="chatInputForm">
+            <div class="cds--chat-input-row">
+              <input type="text" id="chatTextInput" class="cds--text-input" placeholder="Type a message..."
+                maxlength="300" autocomplete="off">
+              <button type="submit" class="cds--btn cds--btn--primary cds--btn--icon-only" id="btnSendChat"
+                title="Send">
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+                  <path
+                    d="M15.854.146a.5.5 0 0 1 .11.54l-5.8 14a.5.5 0 0 1-.928-.008L6.879 9.12 1.322 6.764a.5.5 0 0 1-.008-.928l14-5.8a.5.5 0 0 1 .54.11z" />
+                </svg>
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- TAB 2: Members -->
+        <div class="cds--tab-panel tab-members hidden" id="tabContentMembers">
+          <div class="cds--panel-header">Connected Party Members</div>
+          <div class="cds--member-list" id="membersListContainer"></div>
+        </div>
+
+        <!-- TAB 3: Settings -->
+        <div class="cds--tab-panel tab-settings hidden" id="tabContentSettings">
+          <div class="cds--settings-section">
+            <div class="cds--settings-label">Playback Controls</div>
+            <div class="cds--setting-row">
+              <div class="cds--setting-desc">
+                <strong>Host-Only Playback</strong>
+                <p>Restrict play, pause and seek to host only.</p>
+              </div>
+              <label class="cds--toggle">
+                <input type="checkbox" id="chkHostOnlyControls">
+                <span class="cds--toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="cds--settings-section">
+            <div class="cds--settings-label">Network Host URL</div>
+            <div class="cds--code-snippet cds--font-mono" id="settingsLanUrlDisplay">Loading...</div>
+            <button class="cds--btn cds--btn--secondary cds--btn--full mt-2" id="btnOpenQrFromSettings">
+              <span>View QR Code</span>
+            </button>
+          </div>
+
+          <div class="cds--settings-section">
+            <div class="cds--settings-label">Keyboard Shortcuts</div>
+            <div class="cds--shortcuts-table cds--font-mono">
+              <div class="cds--shortcut-row"><span>Space / K</span><span>Play / Pause</span></div>
+              <div class="cds--shortcut-row"><span>← / →</span><span>Seek ±10s</span></div>
+              <div class="cds--shortcut-row"><span>M</span><span>Mute Toggle</span></div>
+              <div class="cds--shortcut-row"><span>F</span><span>Fullscreen</span></div>
+              <div class="cds--shortcut-row"><span>T</span><span>Theater Mode</span></div>
+              <div class="cds--shortcut-row"><span>C</span><span>Toggle Sidebar</span></div>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </main>
+
+    <!-- Share & QR Modal -->
+    <div class="cds--modal-overlay hidden" id="modalShare">
+      <div class="cds--modal">
+        <div class="cds--modal-header">
+          <h3 class="cds--modal-title">Join via Local Network</h3>
+          <button class="cds--modal-close" id="btnCloseShareModal">&times;</button>
+        </div>
+        <div class="cds--modal-body">
+          <p class="cds--body-01">Scan with any smartphone camera or open the link below on devices connected to this
+            Wi-Fi:</p>
+          <div class="cds--qr-box">
+            <img id="qrCodeImage" class="cds--qr-img" src="" alt="LAN Join QR Code">
+          </div>
+          <div class="cds--form-item">
+            <label class="cds--label">Local Network URL</label>
+            <div class="cds--copy-input-row">
+              <input type="text" id="inputShareUrl" class="cds--text-input cds--font-mono" readonly>
+              <button class="cds--btn cds--btn--primary" id="btnCopyShareUrl">Copy Link</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Upload Modal -->
+    <div class="cds--modal-overlay hidden" id="modalUpload">
+      <div class="cds--modal">
+        <div class="cds--modal-header">
+          <h3 class="cds--modal-title">Upload Video Stream</h3>
+          <button class="cds--modal-close" id="btnCloseUploadModal">&times;</button>
+        </div>
+        <div class="cds--modal-body">
+          <!-- Standalone hidden file input (outside dropzone to prevent event bubbling conflict) -->
+          <input type="file" id="videoFileInput"
+            accept="video/mp4,video/webm,video/ogg,video/x-matroska,video/quicktime,.mp4,.webm,.mkv,.mov"
+            class="cds--hidden-file">
+          <input type="file" id="subtitleFileInput" accept=".srt,.vtt,text/vtt" class="cds--hidden-file">
+
+          <!-- Drop Area -->
+          <div class="cds--dropzone" id="uploadDropzone">
+            <div class="cds--dropzone__icon">
+              <svg width="32" height="32" viewBox="0 0 16 16" fill="currentColor">
+                <path
+                  d="M8 1a.5.5 0 0 1 .5.5v8.793l2.146-2.147a.5.5 0 0 1 .708.708l-3 3a.5.5 0 0 1-.708 0l-3-3a.5.5 0 1 1 .708-.708L7.5 10.293V1.5A.5.5 0 0 1 8 1z"
+                  transform="rotate(180 8 8)" />
+                <path
+                  d="M2 13a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-2a.5.5 0 0 1 1 0v2a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2v-2a.5.5 0 0 1 1 0v2z" />
+              </svg>
+            </div>
+            <div class="cds--dropzone__text">
+              <strong>Drag and drop video file here</strong> or <span class="cds--link-btn"
+                id="btnBrowseFilesTrigger">browse your computer</span>
+            </div>
+            <div class="cds--dropzone__formats">Supports MP4, WebM, MKV, MOV (Up to 10GB)</div>
+          </div>
+
+          <!-- Selected File Details -->
+          <div class="cds--file-selected hidden" id="selectedFileInfo">
+            <div class="cds--file-selected__info">
+              <span class="cds--file-name cds--font-mono" id="selectedFileName">filename.mp4</span>
+              <span class="cds--file-size" id="selectedFileSize">0 MB</span>
+            </div>
+            <button type="button" class="cds--btn cds--btn--ghost cds--btn--sm" id="btnRemoveSelectedFile">Change
+              File</button>
+          </div>
+
+          <!-- Subtitle Upload Row -->
+          <div class="cds--subtitle-row">
+            <label class="cds--label">Optional Subtitles (.SRT or .VTT)</label>
+            <div class="cds--sub-input-row">
+              <button type="button" class="cds--btn cds--btn--secondary cds--btn--sm" id="btnBrowseSubtitles">
+                <span id="subtitlesBtnText">+ Attach Subtitle File</span>
+              </button>
+              <span class="cds--sub-name cds--font-mono hidden" id="subtitlesAttachedName"></span>
+            </div>
+          </div>
+
+          <!-- Upload Progress -->
+          <div class="cds--progress-section hidden" id="uploadProgressWrap">
+            <div class="cds--progress-header">
+              <span id="uploadProgressStatus">Uploading to local server...</span>
+              <span class="cds--font-mono" id="uploadProgressPercent">0%</span>
+            </div>
+            <div class="cds--progress-track">
+              <div class="cds--progress-fill" id="uploadProgressBarFill"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="cds--modal-footer">
+          <button class="cds--btn cds--btn--secondary" id="btnCancelUpload">Cancel</button>
+          <button class="cds--btn cds--btn--primary" id="btnStartUpload" disabled>
+            <span>Upload & Stream</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Video Library Modal -->
+    <div class="cds--modal-overlay hidden" id="modalLibrary">
+      <div class="cds--modal cds--modal--lg">
+        <div class="cds--modal-header">
+          <h3 class="cds--modal-title">Uploaded Video Library</h3>
+          <button class="cds--modal-close" id="btnCloseLibraryModal">&times;</button>
+        </div>
+        <div class="cds--modal-body">
+          <div class="cds--library-grid" id="libraryVideosGrid">
+            <div class="cds--library-loading">Loading uploads...</div>
+          </div>
+        </div>
+        <div class="cds--modal-footer">
+          <button class="cds--btn cds--btn--secondary" id="btnCloseLibraryFooter">Close</button>
+          <button class="cds--btn cds--btn--primary" id="btnOpenUploadFromLibrary">Upload New File</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- YouTube Stream Modal -->
+    <div class="cds--modal-overlay hidden" id="modalYouTube">
+      <div class="cds--modal">
+        <div class="cds--modal-header">
+          <h3 class="cds--modal-title">Stream YouTube Video</h3>
+          <button class="cds--modal-close" id="btnCloseYouTubeModal">&times;</button>
+        </div>
+        <div class="cds--modal-body">
+          <div class="cds--form-item">
+            <label class="cds--label" for="inputYouTubeUrl">YouTube Video URL</label>
+            <input type="text" id="inputYouTubeUrl" class="cds--text-input"
+              placeholder="https://www.youtube.com/watch?v=... or https://youtu.be/..." autofocus>
+            <div class="cds--form-requirement">Paste any YouTube URL to stream synchronously in this watch party.</div>
+          </div>
+          <div class="cds--yt-preview hidden" id="youTubePreviewWrap">
+            <img id="youTubeThumbnail" class="cds--yt-thumb" src="" alt="Thumbnail">
+            <div class="cds--yt-info">
+              <div class="cds--yt-title" id="youTubePreviewTitle">YouTube Stream</div>
+              <div class="cds--tag cds--tag--sm cds--tag--blue">Ready to Synchronize</div>
+            </div>
+          </div>
+        </div>
+        <div class="cds--modal-footer">
+          <button class="cds--btn cds--btn--secondary" id="btnCancelYouTube">Cancel</button>
+          <button class="cds--btn cds--btn--primary" id="btnStartYouTube">Stream to Room</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="cds--toast-stack" id="toastContainer"></div>
+
+  </div>
+
+  <!-- Scripts -->
+  <script src="/js/reactions.js"></script>
+  <script src="/js/chat.js"></script>
+  <script src="/js/sync.js"></script>
+  <script src="/js/player.js"></script>
+  <script src="/js/app.js"></script>
+</body>
+
+</html>

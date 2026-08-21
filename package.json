@@ -1,0 +1,30 @@
+{
+  "name": "streamhero",
+  "version": "1.0.0",
+  "description": "Synchronized local network and YouTube watch party application",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "keywords": [
+    "watch-party",
+    "video-streaming",
+    "socketio",
+    "lan-sync",
+    "youtube-sync"
+  ],
+  "author": "Nishant",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "ip": "^2.0.1",
+    "multer": "^1.4.5-lts.1",
+    "qrcode": "^1.5.4",
+    "socket.io": "^4.8.1"
+  },
+  "devDependencies": {
+    "socket.io-client": "^4.8.3"
+  }
+}
