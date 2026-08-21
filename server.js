@@ -43,6 +43,8 @@ app.use('/uploads/audio', express.static(AUDIO_DIR));
 
 // Helper: Get local network IP addresses
 function getLocalNetworkInfo() {
+  const addr = (server && server.address && typeof server.address === 'function') ? server.address() : null;
+  const activePort = (addr && typeof addr === 'object' && addr.port) ? addr.port : PORT;
   const interfaces = os.networkInterfaces();
   const addresses = [];
 
@@ -53,18 +55,19 @@ function getLocalNetworkInfo() {
         addresses.push({
           interface: name,
           ip: net.address,
-          url: `http://${net.address}:${PORT}`
+          url: `http://${net.address}:${activePort}`
         });
       }
     }
   }
 
   const primaryIp = addresses.length > 0 ? addresses[0].ip : 'localhost';
-  const primaryUrl = addresses.length > 0 ? addresses[0].url : `http://localhost:${PORT}`;
+  const primaryUrl = addresses.length > 0 ? addresses[0].url : `http://localhost:${activePort}`;
 
   return {
     primaryIp,
     primaryUrl,
+    activePort,
     allInterfaces: addresses
   };
 }
@@ -702,10 +705,42 @@ io.on('connection', (socket) => {
   });
 });
 
-// Start server
-server.listen(PORT, '0.0.0.0', () => {
-  const netInfo = getLocalNetworkInfo();
-  console.log(`[StreamHero] Server listening on port ${PORT}`);
-  console.log(`  Local: http://localhost:${PORT}`);
-  console.log(`  LAN:   ${netInfo.primaryUrl}`);
-});
+// Start server with fallback port handling
+function startServer(port = PORT, maxRetries = 10) {
+  let currentPort = parseInt(port, 10);
+  let attempt = 0;
+
+  function tryListen(p) {
+    server.removeAllListeners('error');
+
+    server.once('error', (err) => {
+      if (err.code === 'EADDRINUSE') {
+        attempt++;
+        if (attempt <= maxRetries) {
+          const nextPort = p + 1;
+          console.warn(`[StreamHero] Port ${p} is in use, attempting port ${nextPort}...`);
+          tryListen(nextPort);
+        } else {
+          console.error(`[StreamHero] Could not find an open port after ${maxRetries} attempts.`);
+        }
+      } else {
+        console.error('[StreamHero] Server error:', err);
+      }
+    });
+
+    server.listen(p, '0.0.0.0', () => {
+      const netInfo = getLocalNetworkInfo();
+      console.log(`[StreamHero] Server successfully listening on port ${p}`);
+      console.log(`  Local: http://localhost:${p}`);
+      console.log(`  LAN:   ${netInfo.primaryUrl}`);
+    });
+  }
+
+  tryListen(currentPort);
+}
+
+startServer(PORT);
+
+module.exports = { app, server, io, startServer, getLocalNetworkInfo };
+
+

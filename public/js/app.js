@@ -13,16 +13,23 @@ document.addEventListener('DOMContentLoaded', () => {
   const toastContainer = document.getElementById('toastContainer');
   const lobbyBgCanvas = document.getElementById('lobbyBgCanvas');
 
-  // Interactive Harmonic Aurora & Bioluminescent Mesh Background
+  // Modern Interactive Chromatic Fluid Mesh & Cyber Grid Background (2026 Aesthetic)
   let bgAnimId = null;
   function initLobbyBackground() {
     if (!lobbyBgCanvas) return { start: () => {} };
     const ctx = lobbyBgCanvas.getContext('2d');
     let width, height;
-    let particles = [];
-    const particleCount = 55;
-    let mouse = { x: null, y: null, targetX: null, targetY: null, radius: 180 };
+    let mouse = { x: null, y: null, targetX: null, targetY: null, radius: 240 };
     let time = 0;
+    let clickRipples = [];
+
+    // Organic Floating Chromatic Orbs
+    const orbs = [
+      { x: 0.25, y: 0.35, vx: 0.0007, vy: 0.0009, radius: 0.32, colorDark: 'rgba(60, 255, 209, 0.16)', colorLight: 'rgba(60, 255, 209, 0.20)' },
+      { x: 0.75, y: 0.65, vx: -0.0006, vy: 0.0008, radius: 0.38, colorDark: 'rgba(99, 102, 241, 0.15)', colorLight: 'rgba(99, 102, 241, 0.14)' },
+      { x: 0.60, y: 0.20, vx: 0.0008, vy: -0.0006, radius: 0.28, colorDark: 'rgba(0, 180, 216, 0.14)', colorLight: 'rgba(0, 180, 216, 0.16)' },
+      { x: 0.20, y: 0.80, vx: -0.0005, vy: -0.0007, radius: 0.34, colorDark: 'rgba(16, 185, 129, 0.13)', colorLight: 'rgba(16, 185, 129, 0.15)' }
+    ];
 
     function resize() {
       width = lobbyBgCanvas.width = window.innerWidth;
@@ -42,86 +49,145 @@ document.addEventListener('DOMContentLoaded', () => {
       mouse.targetY = null;
     });
 
-    class AuroraParticle {
-      constructor() {
-        this.reset();
+    window.addEventListener('click', (e) => {
+      if (e.target === lobbyBgCanvas || e.target.closest('.cds--lobby-view')) {
+        clickRipples.push({
+          x: e.clientX,
+          y: e.clientY,
+          radius: 10,
+          maxRadius: 360,
+          alpha: 0.6
+        });
       }
+    });
 
-      reset() {
-        this.x = Math.random() * width;
-        this.y = Math.random() * height;
-        this.vx = (Math.random() - 0.5) * 0.6;
-        this.vy = (Math.random() - 0.5) * 0.6;
-        this.baseRadius = Math.random() * 2.2 + 1.2;
-        this.radius = this.baseRadius;
-        this.pulseSpeed = Math.random() * 0.03 + 0.015;
-        this.pulseOffset = Math.random() * Math.PI * 2;
+    function drawModernBackground(isDark) {
+      ctx.clearRect(0, 0, width, height);
+
+      // 1. Base Subtle Geometric Noise & Depth
+      const bgGrad = ctx.createRadialGradient(width * 0.5, height * 0.5, 0, width * 0.5, height * 0.5, Math.max(width, height) * 0.8);
+      if (isDark) {
+        bgGrad.addColorStop(0, '#161918');
+        bgGrad.addColorStop(0.6, '#0f1211');
+        bgGrad.addColorStop(1, '#080a0a');
+      } else {
+        bgGrad.addColorStop(0, '#f4f6f8');
+        bgGrad.addColorStop(0.6, '#eceef2');
+        bgGrad.addColorStop(1, '#e1e4e9');
       }
+      ctx.fillStyle = bgGrad;
+      ctx.fillRect(0, 0, width, height);
 
-      update() {
-        this.x += this.vx;
-        this.y += this.vy;
-        this.radius = this.baseRadius + Math.sin(time * this.pulseSpeed + this.pulseOffset) * 0.8;
+      // 2. Render Smooth Fluid Volumetric Chromatic Orbs
+      ctx.save();
+      ctx.globalCompositeOperation = isDark ? 'screen' : 'source-over';
 
-        if (this.x < 0) this.x = width;
-        if (this.x > width) this.x = 0;
-        if (this.y < 0) this.y = height;
-        if (this.y > height) this.y = 0;
+      orbs.forEach((orb, i) => {
+        // Harmonic Lissajous organic trajectory
+        const currentX = (orb.x * width) + Math.sin(time * 0.8 + i * 1.6) * (width * 0.08);
+        const currentY = (orb.y * height) + Math.cos(time * 0.6 + i * 2.1) * (height * 0.08);
+        const currentR = Math.max(width, height) * orb.radius;
 
-        if (mouse.x !== null && mouse.y !== null) {
-          const dx = mouse.x - this.x;
-          const dy = mouse.y - this.y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < mouse.radius) {
-            const force = (mouse.radius - dist) / mouse.radius;
-            this.x -= (dx / dist) * force * 2.2;
-            this.y -= (dy / dist) * force * 2.2;
-          }
-        }
-      }
-
-      draw(isDark) {
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-        ctx.fillStyle = isDark ? 'rgba(60, 255, 209, 0.7)' : 'rgba(10, 115, 92, 0.5)';
-        ctx.shadowColor = '#3cffd1';
-        ctx.shadowBlur = isDark ? 8 : 4;
-        ctx.fill();
-        ctx.shadowBlur = 0;
-      }
-    }
-
-    for (let i = 0; i < particleCount; i++) {
-      particles.push(new AuroraParticle());
-    }
-
-    function drawAuroraWave(yBase, amplitude, wavelength, speed, color1, color2) {
-      ctx.beginPath();
-      ctx.moveTo(0, height);
-
-      for (let x = 0; x <= width; x += 15) {
-        let mouseDisplacement = 0;
+        // Mouse gentle repulsion / pull
+        let offsetX = 0;
+        let offsetY = 0;
         if (mouse.x !== null) {
-          const dist = Math.abs(x - mouse.x);
-          if (dist < 220) {
-            mouseDisplacement = Math.cos((dist / 220) * (Math.PI / 2)) * 35;
+          const dx = currentX - mouse.x;
+          const dy = currentY - mouse.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 400 && dist > 0) {
+            offsetX = (dx / dist) * 40;
+            offsetY = (dy / dist) * 40;
           }
         }
 
-        const y = yBase + Math.sin((x / wavelength) + (time * speed)) * amplitude 
-                + Math.cos((x / (wavelength * 0.6)) + (time * speed * 0.8)) * (amplitude * 0.4)
-                - mouseDisplacement;
-        ctx.lineTo(x, y);
+        const orbGrad = ctx.createRadialGradient(
+          currentX + offsetX, currentY + offsetY, 0,
+          currentX + offsetX, currentY + offsetY, currentR
+        );
+        const color = isDark ? orb.colorDark : orb.colorLight;
+        orbGrad.addColorStop(0, color);
+        orbGrad.addColorStop(0.4, color.replace(/[\d\.]+\)$/, isDark ? '0.08)' : '0.06)'));
+        orbGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+        ctx.fillStyle = orbGrad;
+        ctx.beginPath();
+        ctx.arc(currentX + offsetX, currentY + offsetY, currentR, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      ctx.restore();
+
+      // 3. Precision Cyber Dot Matrix Grid
+      const gridSize = 36;
+      const startX = (width % gridSize) / 2;
+      const startY = (height % gridSize) / 2;
+
+      ctx.save();
+      for (let x = startX; x < width; x += gridSize) {
+        for (let y = startY; y < height; y += gridSize) {
+          let dotRadius = 1.1;
+          let dotAlpha = isDark ? 0.16 : 0.22;
+          let displaceX = 0;
+          let displaceY = 0;
+
+          // Mouse proximity field
+          if (mouse.x !== null && mouse.y !== null) {
+            const dx = x - mouse.x;
+            const dy = y - mouse.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < mouse.radius) {
+              const norm = (mouse.radius - dist) / mouse.radius;
+              dotRadius = 1.1 + norm * 2.2;
+              dotAlpha = isDark ? (0.16 + norm * 0.65) : (0.22 + norm * 0.55);
+              displaceX = (dx / dist) * norm * 6;
+              displaceY = (dy / dist) * norm * 6;
+            }
+          }
+
+          // Subtle wave shimmer
+          const shimmer = Math.sin((x * 0.01) + (y * 0.01) + (time * 1.5)) * 0.06;
+          dotAlpha = Math.max(0.05, Math.min(0.9, dotAlpha + shimmer));
+
+          ctx.beginPath();
+          ctx.arc(x + displaceX, y + displaceY, dotRadius, 0, Math.PI * 2);
+          ctx.fillStyle = isDark
+            ? (dotAlpha > 0.35 ? `rgba(60, 255, 209, ${dotAlpha})` : `rgba(255, 255, 255, ${dotAlpha * 0.7})`)
+            : (dotAlpha > 0.35 ? `rgba(11, 121, 98, ${dotAlpha})` : `rgba(30, 30, 30, ${dotAlpha * 0.7})`);
+          ctx.fill();
+        }
+      }
+      ctx.restore();
+
+      // 4. Click Energy Ripple Pulses
+      for (let i = clickRipples.length - 1; i >= 0; i--) {
+        const ripple = clickRipples[i];
+        ripple.radius += 6;
+        ripple.alpha *= 0.94;
+
+        ctx.beginPath();
+        ctx.arc(ripple.x, ripple.y, ripple.radius, 0, Math.PI * 2);
+        ctx.strokeStyle = isDark 
+          ? `rgba(60, 255, 209, ${ripple.alpha * 0.8})` 
+          : `rgba(11, 121, 98, ${ripple.alpha * 0.8})`;
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        if (ripple.alpha <= 0.02 || ripple.radius >= ripple.maxRadius) {
+          clickRipples.splice(i, 1);
+        }
       }
 
-      ctx.lineTo(width, height);
-      ctx.closePath();
-
-      const grad = ctx.createLinearGradient(0, yBase - amplitude, 0, height);
-      grad.addColorStop(0, color1);
-      grad.addColorStop(1, color2);
-      ctx.fillStyle = grad;
-      ctx.fill();
+      // 5. Specular Cursor Light Sheen
+      if (mouse.x !== null && mouse.y !== null) {
+        const sheen = ctx.createRadialGradient(mouse.x, mouse.y, 0, mouse.x, mouse.y, 220);
+        sheen.addColorStop(0, isDark ? 'rgba(60, 255, 209, 0.12)' : 'rgba(60, 255, 209, 0.18)');
+        sheen.addColorStop(0.5, isDark ? 'rgba(99, 102, 241, 0.05)' : 'rgba(99, 102, 241, 0.08)');
+        sheen.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        ctx.fillStyle = sheen;
+        ctx.beginPath();
+        ctx.arc(mouse.x, mouse.y, 220, 0, Math.PI * 2);
+        ctx.fill();
+      }
     }
 
     function animate() {
@@ -130,9 +196,9 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      time += 0.016;
+      time += 0.015;
 
-      // Smooth mouse coordinate damping
+      // Smooth mouse easing
       if (mouse.targetX !== null) {
         if (mouse.x === null) {
           mouse.x = mouse.targetX;
@@ -147,51 +213,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       const isDark = document.body.classList.contains('cds--theme-g100');
-      ctx.clearRect(0, 0, width, height);
-
-      // Render 3 Harmonic Aurora Wave Layers
-      if (isDark) {
-        drawAuroraWave(height * 0.72, 45, 260, 0.45, 'rgba(60, 255, 209, 0.06)', 'rgba(15, 25, 22, 0.0)');
-        drawAuroraWave(height * 0.78, 38, 200, 0.65, 'rgba(30, 200, 165, 0.08)', 'rgba(10, 20, 18, 0.0)');
-        drawAuroraWave(height * 0.84, 30, 160, 0.85, 'rgba(60, 255, 209, 0.07)', 'rgba(5, 15, 12, 0.0)');
-      } else {
-        drawAuroraWave(height * 0.70, 40, 260, 0.45, 'rgba(60, 255, 209, 0.12)', 'rgba(244, 244, 244, 0.0)');
-        drawAuroraWave(height * 0.76, 32, 200, 0.65, 'rgba(30, 180, 150, 0.10)', 'rgba(244, 244, 244, 0.0)');
-        drawAuroraWave(height * 0.82, 26, 160, 0.85, 'rgba(60, 255, 209, 0.08)', 'rgba(244, 244, 244, 0.0)');
-      }
-
-      // Draw Interactive Particle Constellation Mesh
-      for (let i = 0; i < particles.length; i++) {
-        particles[i].update();
-        particles[i].draw(isDark);
-
-        for (let j = i + 1; j < particles.length; j++) {
-          const dx = particles[i].x - particles[j].x;
-          const dy = particles[i].y - particles[j].y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-
-          if (dist < 140) {
-            const alpha = (1 - dist / 140) * (isDark ? 0.32 : 0.22);
-            ctx.beginPath();
-            ctx.moveTo(particles[i].x, particles[i].y);
-            ctx.lineTo(particles[j].x, particles[j].y);
-            ctx.strokeStyle = isDark ? `rgba(60, 255, 209, ${alpha})` : `rgba(10, 120, 95, ${alpha})`;
-            ctx.lineWidth = 1;
-            ctx.stroke();
-          }
-        }
-      }
-
-      // Cursor light glow
-      if (mouse.x !== null && mouse.y !== null) {
-        const cursorGrad = ctx.createRadialGradient(mouse.x, mouse.y, 0, mouse.x, mouse.y, 140);
-        cursorGrad.addColorStop(0, isDark ? 'rgba(60, 255, 209, 0.16)' : 'rgba(60, 255, 209, 0.22)');
-        cursorGrad.addColorStop(1, 'rgba(60, 255, 209, 0)');
-        ctx.fillStyle = cursorGrad;
-        ctx.beginPath();
-        ctx.arc(mouse.x, mouse.y, 140, 0, Math.PI * 2);
-        ctx.fill();
-      }
+      drawModernBackground(isDark);
 
       bgAnimId = requestAnimationFrame(animate);
     }
