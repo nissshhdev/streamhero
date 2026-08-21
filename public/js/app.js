@@ -236,6 +236,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnAvatarPicker = document.getElementById('btnAvatarPicker');
   const avatarSelectorGrid = document.getElementById('avatarSelectorGrid');
 
+  // Instructions Modal & Button
+  const modalInstructions = document.getElementById('modalInstructions');
+  const btnOpenInstructionsModal = document.getElementById('btnOpenInstructionsModal');
+  const btnNavInstructions = document.getElementById('btnNavInstructions');
+  const btnCloseInstructionsModal = document.getElementById('btnCloseInstructionsModal');
+  const btnCloseInstructionsFooter = document.getElementById('btnCloseInstructionsFooter');
+
   // Modals & Navigation Buttons
   const modalShare = document.getElementById('modalShare');
   const btnShareParty = document.getElementById('btnShareParty');
@@ -605,6 +612,25 @@ document.addEventListener('DOMContentLoaded', () => {
     btnCopyShareUrl.addEventListener('click', () => {
       copyToClipboard(inputShareUrl.value);
       showToast('Link copied! Share it on your Wi-Fi network', 'success');
+    });
+  }
+
+  // Instructions Modal Handlers
+  function openInstructionsModal() {
+    if (modalInstructions) modalInstructions.classList.remove('hidden');
+  }
+
+  function closeInstructionsModal() {
+    if (modalInstructions) modalInstructions.classList.add('hidden');
+  }
+
+  if (btnOpenInstructionsModal) btnOpenInstructionsModal.addEventListener('click', openInstructionsModal);
+  if (btnNavInstructions) btnNavInstructions.addEventListener('click', openInstructionsModal);
+  if (btnCloseInstructionsModal) btnCloseInstructionsModal.addEventListener('click', closeInstructionsModal);
+  if (btnCloseInstructionsFooter) btnCloseInstructionsFooter.addEventListener('click', closeInstructionsModal);
+  if (modalInstructions) {
+    modalInstructions.addEventListener('click', (e) => {
+      if (e.target === modalInstructions) closeInstructionsModal();
     });
   }
 

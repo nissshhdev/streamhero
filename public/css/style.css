@@ -1869,6 +1869,213 @@ input:checked+.cds--toggle-slider:before {
   border-left-color: var(--cds-support-info);
 }
 
+/* ========================================================
+   INSTRUCTIONS 'i' BUTTON & GUIDE MODAL
+   ======================================================== */
+.cds--lobby-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.cds--info-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: rgba(12, 165, 133, 0.08);
+  border: 1px solid rgba(12, 165, 133, 0.25);
+  border-radius: 14px;
+  padding: 0.15rem 0.55rem;
+  font-size: 0.6875rem;
+  font-family: var(--cds-font-sans);
+  color: var(--cds-text-01);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.2, 0, 0.38, 0.9);
+}
+
+.cds--info-btn:hover {
+  background: var(--cds-interactive-primary);
+  color: var(--cds-text-on-color);
+  border-color: var(--cds-interactive-primary);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(12, 165, 133, 0.25);
+}
+
+.cds--info-symbol {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: var(--cds-interactive-primary);
+  color: var(--cds-text-on-color);
+  font-size: 0.625rem;
+  font-weight: 700;
+  font-family: serif;
+  font-style: italic;
+  line-height: 1;
+}
+
+.cds--info-btn:hover .cds--info-symbol {
+  background: #ffffff;
+  color: var(--cds-text-01);
+}
+
+.cds--info-header-btn {
+  font-family: serif;
+  font-style: italic;
+  font-weight: 700;
+  font-size: 0.9375rem;
+}
+
+.cds--info-symbol-nav {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1.5px solid currentColor;
+  line-height: 1;
+  font-size: 0.75rem;
+}
+
+/* Modal Header Title with Icon */
+.cds--modal-header-icon-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.cds--modal-info-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--cds-interactive-primary);
+  color: var(--cds-text-on-color);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  font-family: serif;
+  font-style: italic;
+}
+
+/* Instructions Body & Grid */
+.cds--instructions-body {
+  max-height: 68vh;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+.cds--instruction-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.cds--instruction-card {
+  display: flex;
+  gap: 0.75rem;
+  background: var(--cds-bg-layer-02);
+  border: 1px solid var(--cds-border-subtle);
+  border-radius: 6px;
+  padding: 0.875rem;
+  transition: all 0.2s ease;
+}
+
+.cds--instruction-card:hover {
+  border-color: var(--cds-border-strong);
+  background: var(--cds-bg-layer-01);
+}
+
+.cds--instruction-card__icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.cds--instruction-card__content h4 {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--cds-text-01);
+  margin-bottom: 0.25rem;
+}
+
+.cds--instruction-card__content p {
+  font-size: 0.75rem;
+  color: var(--cds-text-02);
+  line-height: 1.35;
+  margin: 0;
+}
+
+.cds--instruction-card__content code {
+  font-family: var(--cds-font-mono);
+  background: rgba(0, 0, 0, 0.06);
+  padding: 0.1rem 0.3rem;
+  border-radius: 3px;
+  font-size: 0.6875rem;
+}
+
+body.cds--theme-g100 .cds--instruction-card__content code {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Shortcuts Section */
+.cds--shortcuts-section {
+  background: var(--cds-bg-layer-02);
+  border: 1px solid var(--cds-border-subtle);
+  border-radius: 6px;
+  padding: 0.875rem;
+}
+
+.cds--shortcuts-title {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--cds-text-01);
+  margin-bottom: 0.625rem;
+}
+
+.cds--shortcuts-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+
+.cds--shortcut-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.6875rem;
+  color: var(--cds-text-02);
+}
+
+.cds--shortcut-item kbd {
+  display: inline-block;
+  padding: 0.15rem 0.4rem;
+  font-family: var(--cds-font-mono);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--cds-text-01);
+  background: var(--cds-bg-layer-01);
+  border: 1px solid var(--cds-border-strong);
+  border-radius: 3px;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+}
+
+@media (max-width: 600px) {
+  .cds--instruction-grid {
+    grid-template-columns: 1fr;
+  }
+  .cds--shortcuts-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
 /* Responsive */
 @media (max-width: 850px) {
   .cds--theater-view {

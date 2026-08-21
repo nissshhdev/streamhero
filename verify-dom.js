@@ -21,7 +21,8 @@ const idsToCheck = [
   'timelineBuffer', 'timelineThumb', 'timelineHoverTime', 'btnPip', 'btnTheaterMode',
   'btnFullscreen', 'playStateCue', 'btnSpeedToggle', 'speedDropdownMenu', 'currentSpeedLabel',
   'btnSubtitlesToggle', 'subtitlesDropdownMenu', 'btnForceSync', 'chatMessagesContainer',
-  'chatTextInput', 'chatInputForm', 'chatUnreadDot', 'reactionsContainer'
+  'chatTextInput', 'chatInputForm', 'chatUnreadDot', 'reactionsContainer',
+  'btnOpenInstructionsModal', 'btnNavInstructions', 'modalInstructions', 'btnCloseInstructionsModal', 'btnCloseInstructionsFooter'
 ];
 
 let missing = [];

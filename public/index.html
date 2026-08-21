@@ -119,6 +119,12 @@
 
       <!-- Right Header Group: Theme Toggle & Network Status -->
       <div class="cds--header__right">
+        <!-- Instructions 'i' Button in Header -->
+        <button class="cds--btn cds--btn--ghost cds--btn--icon-only cds--info-header-btn" id="btnNavInstructions"
+          title="StreamHero Instructions & Shortcuts">
+          <span class="cds--info-symbol-nav">i</span>
+        </button>
+
         <!-- Contribute on GitHub Header Button -->
         <a href="https://github.com/nissshhdev/streamhero" target="_blank" rel="noopener noreferrer"
           class="cds--btn cds--btn--ghost cds--btn--icon-only cds--github-header-btn"
@@ -149,7 +155,13 @@
 
       <div class="cds--lobby-panel">
         <div class="cds--lobby-panel__header">
-          <div class="cds--tag cds--tag--blue">StreamHero &bull; by Nishant</div>
+          <div class="cds--lobby-header-row">
+            <div class="cds--tag cds--tag--blue">StreamHero &bull; by Nishant</div>
+            <button type="button" class="cds--info-btn" id="btnOpenInstructionsModal" title="Instructions & How to Use">
+              <span class="cds--info-symbol">i</span>
+              <span class="cds--info-btn-text">Guide</span>
+            </button>
+          </div>
           <h1 class="cds--heading-04">StreamHero Watch Party</h1>
           <p class="cds--body-01">Upload once or stream YouTube synchronously with zero delay over the local network.
           </p>
@@ -740,6 +752,72 @@
         <div class="cds--modal-footer">
           <button class="cds--btn cds--btn--secondary" id="btnCancelYouTube">Cancel</button>
           <button class="cds--btn cds--btn--primary" id="btnStartYouTube">Stream to Room</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Instructions & Guide Modal -->
+    <div class="cds--modal-overlay hidden" id="modalInstructions">
+      <div class="cds--modal cds--modal--lg">
+        <div class="cds--modal-header">
+          <div class="cds--modal-header-icon-title">
+            <span class="cds--modal-info-badge">i</span>
+            <h3 class="cds--modal-title">StreamHero — Quick Start &amp; Instructions</h3>
+          </div>
+          <button class="cds--modal-close" id="btnCloseInstructionsModal">&times;</button>
+        </div>
+        <div class="cds--modal-body cds--instructions-body">
+          <div class="cds--instruction-grid">
+
+            <div class="cds--instruction-card">
+              <div class="cds--instruction-card__icon">🚀</div>
+              <div class="cds--instruction-card__content">
+                <h4>1. Join or Create a Party</h4>
+                <p>Enter your <strong>Nickname</strong>, pick an avatar, and enter a <strong>Room Code</strong> (default is <code>MAIN</code>). Share the same code with your friends to watch together.</p>
+              </div>
+            </div>
+
+            <div class="cds--instruction-card">
+              <div class="cds--instruction-card__icon">📺</div>
+              <div class="cds--instruction-card__content">
+                <h4>2. Stream Local Video or YouTube</h4>
+                <p>Click <strong>Upload</strong> to drag &amp; drop video files (<code>.mp4</code>, <code>.webm</code>, <code>.mkv</code>, <code>.mov</code>) or paste any <strong>YouTube link</strong> for synchronized streaming.</p>
+              </div>
+            </div>
+
+            <div class="cds--instruction-card">
+              <div class="cds--instruction-card__icon">📱</div>
+              <div class="cds--instruction-card__content">
+                <h4>3. Mobile &amp; LAN QR Joining</h4>
+                <p>Click <strong>Share QR</strong> in the top bar. Any phone or tablet on the same Wi-Fi can scan the QR code to join your stream instantly with zero setup.</p>
+              </div>
+            </div>
+
+            <div class="cds--instruction-card">
+              <div class="cds--instruction-card__icon">🎧</div>
+              <div class="cds--instruction-card__content">
+                <h4>4. Multi-Track &amp; Dubbed Audio</h4>
+                <p>Attach external dubbed audio files (<code>.mp3</code>, <code>.m4a</code>, <code>.aac</code>) from the audio selector to watch movies in your preferred language in sync.</p>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Shortcuts & Gestures Section -->
+          <div class="cds--shortcuts-section">
+            <h4 class="cds--shortcuts-title">⌨️ Keyboard &amp; Gesture Shortcuts</h4>
+            <div class="cds--shortcuts-grid">
+              <div class="cds--shortcut-item"><kbd>Space</kbd> or <kbd>K</kbd> <span>Play / Pause</span></div>
+              <div class="cds--shortcut-item"><kbd>Double Click</kbd> <span>Seek ±10 Seconds</span></div>
+              <div class="cds--shortcut-item"><kbd>F11</kbd> or <kbd>F</kbd> <span>Toggle Fullscreen</span></div>
+              <div class="cds--shortcut-item"><kbd>M</kbd> <span>Mute / Unmute</span></div>
+              <div class="cds--shortcut-item"><kbd>T</kbd> <span>Theater Mode</span></div>
+              <div class="cds--shortcut-item"><kbd>P</kbd> <span>Picture-in-Picture</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="cds--modal-footer">
+          <button class="cds--btn cds--btn--primary cds--btn--full" id="btnCloseInstructionsFooter">Got it, let's watch!</button>
         </div>
       </div>
     </div>

@@ -128,18 +128,30 @@ app.get('/api/network-info', async (req, res) => {
   try {
     const roomId = req.query.roomId || '';
     const netInfo = getLocalNetworkInfo();
-    const joinUrl = roomId ? `${netInfo.primaryUrl}/?room=${encodeURIComponent(roomId)}` : netInfo.primaryUrl;
+    
+    // Check if hosted on cloud / public domain (Render, Railway, Fly, Heroku, etc.)
+    const forwardedHost = req.headers['x-forwarded-host'] || req.headers.host;
+    const isLocalhost = forwardedHost && (forwardedHost.startsWith('localhost') || forwardedHost.startsWith('127.0.0.1') || forwardedHost.startsWith('192.168.') || forwardedHost.startsWith('10.') || forwardedHost.startsWith('172.'));
+    
+    let activeBaseUrl = netInfo.primaryUrl;
+    if (forwardedHost && !isLocalhost) {
+      const proto = req.headers['x-forwarded-proto'] || 'https';
+      activeBaseUrl = `${proto}://${forwardedHost}`;
+    }
+
+    const joinUrl = roomId ? `${activeBaseUrl}/?room=${encodeURIComponent(roomId)}` : activeBaseUrl;
     const qrDataUrl = await qrcode.toDataURL(joinUrl, {
       width: 280,
       margin: 2,
       color: {
-        dark: '#0f62fe',
+        dark: '#0ca585',
         light: '#FFFFFF'
       }
     });
 
     res.json({
       ...netInfo,
+      primaryUrl: activeBaseUrl,
       joinUrl,
       qrDataUrl
     });
