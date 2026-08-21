@@ -47,7 +47,7 @@
         </span>
         <span class="cds--header__name">Stream<strong>Hero</strong></span>
         <span class="cds--author-tag">by Nishant</span>
-        <span class="cds--header__badge">Watch Party Sync</span>
+        <span class="cds--header__badge">LAN & Sync</span>
       </div>
 
       <!-- In-Room Navigation Controls -->
@@ -75,7 +75,7 @@
             <path
               d="M1 2.5A1.5 1.5 0 0 1 2.5 1h3A1.5 1.5 0 0 1 7 2.5v3A1.5 1.5 0 0 1 5.5 7h-3A1.5 1.5 0 0 1 1 5.5v-3zm8 0A1.5 1.5 0 0 1 10.5 1h3A1.5 1.5 0 0 1 15 2.5v3a1.5 1.5 0 0 1-1.5 1.5h-3A1.5 1.5 0 0 1 9 5.5v-3zm0 8a1.5 1.5 0 0 1 1.5-1.5h3a1.5 1.5 0 0 1 1.5 1.5v3a1.5 1.5 0 0 1-1.5 1.5h-3A1.5 1.5 0 0 1 9 13.5v-3zm-8 0A1.5 1.5 0 0 1 2.5 9h3A1.5 1.5 0 0 1 7 10.5v3A1.5 1.5 0 0 1 5.5 15h-3A1.5 1.5 0 0 1 1 13.5v-3z" />
           </svg>
-          <span>Share Link &amp; QR</span>
+          <span>Share QR</span>
         </button>
 
         <button class="cds--btn cds--btn--primary" id="btnUploadModalNav">
@@ -143,7 +143,7 @@
 
         <div class="cds--header__status">
           <span class="cds--status-indicator" id="serverStatusDot"></span>
-          <span class="cds--status-text" id="networkIpDisplay">Live &amp; Online</span>
+          <span class="cds--status-text" id="networkIpDisplay">LAN Ready</span>
         </div>
       </div>
     </header>
@@ -163,13 +163,8 @@
             </button>
           </div>
           <h1 class="cds--heading-04">StreamHero Watch Party</h1>
-          <p class="cds--body-01">Host private synchronized watch parties with video uploads and YouTube streaming.</p>
-        </div>
-
-        <!-- Mode Switcher (Create vs Join) -->
-        <div class="cds--lobby-mode-switch">
-          <button type="button" class="cds--lobby-mode-btn active" id="tabModeCreate">✨ Create Party</button>
-          <button type="button" class="cds--lobby-mode-btn" id="tabModeJoin">🚪 Join Party</button>
+          <p class="cds--body-01">Upload once or stream YouTube synchronously with zero delay over the local network.
+          </p>
         </div>
 
         <form class="cds--form" id="joinLobbyForm">
@@ -197,27 +192,15 @@
           </div>
 
           <div class="cds--form-item">
-            <div class="cds--label-row">
-              <label class="cds--label" for="inputRoomCode" id="lblRoomCode">Party Room Code</label>
-              <button type="button" class="cds--link-action-btn" id="btnRandomRoomCode" title="Generate New Code">🎲 Random Code</button>
-            </div>
-            <input type="text" id="inputRoomCode" class="cds--text-input cds--font-mono" placeholder="e.g. HERO-8294"
-              maxlength="16" required>
-            <div class="cds--form-requirement" id="roomCodeRequirement">Auto-generated unique room code. Share this code with friends.</div>
-          </div>
-
-          <!-- Room Authentication Passkey Field -->
-          <div class="cds--form-item">
-            <div class="cds--label-row">
-              <label class="cds--label" for="inputRoomPasskey">Room Access Key / Password <span class="cds--optional-badge">(Optional)</span></label>
-            </div>
-            <input type="password" id="inputRoomPasskey" class="cds--text-input cds--font-mono" placeholder="Enter key to protect room" maxlength="24" autocomplete="off">
-            <div class="cds--form-requirement">If set, only participants who provide this key can join your watch party.</div>
+            <label class="cds--label" for="inputRoomCode">Party Room Code</label>
+            <input type="text" id="inputRoomCode" class="cds--text-input cds--font-mono" placeholder="MAIN" value="MAIN"
+              maxlength="12" required>
+            <div class="cds--form-requirement">Default is MAIN. Enter any code to isolate your party.</div>
           </div>
 
           <div class="cds--form-item">
             <button type="submit" class="cds--btn cds--btn--primary cds--btn--full" id="btnJoinRoom">
-              <span id="btnJoinRoomText">Create &amp; Start Party</span>
+              <span>Join Watch Party</span>
               <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
                 <path d="M6 3l5 5-5 5V3z" />
               </svg>
@@ -231,12 +214,12 @@
             <div class="cds--spec-desc">Sub-second range seeking for high bitrate files</div>
           </div>
           <div class="cds--spec-item">
-            <div class="cds--spec-title">Direct Web Link &amp; QR</div>
-            <div class="cds--spec-desc">One-click room URL &amp; QR code party sharing</div>
+            <div class="cds--spec-title">Zero Configuration</div>
+            <div class="cds--spec-desc">Automatic IPv4 LAN discovery & QR sync</div>
           </div>
           <div class="cds--spec-item">
-            <div class="cds--spec-title">Key Authentication</div>
-            <div class="cds--spec-desc">Secure private rooms with custom passkeys</div>
+            <div class="cds--spec-title">Drift Compensation</div>
+            <div class="cds--spec-desc">NTP clock sync with sub-500ms auto adjustment</div>
           </div>
         </div>
 
@@ -631,16 +614,17 @@
     <div class="cds--modal-overlay hidden" id="modalShare">
       <div class="cds--modal">
         <div class="cds--modal-header">
-          <h3 class="cds--modal-title">Invite Friends to Watch Party</h3>
+          <h3 class="cds--modal-title">Join via Local Network</h3>
           <button class="cds--modal-close" id="btnCloseShareModal">&times;</button>
         </div>
         <div class="cds--modal-body">
-          <p class="cds--body-01">Share this party link or scan the QR code to join in lockstep synchronization from any device or browser:</p>
+          <p class="cds--body-01">Scan with any smartphone camera or open the link below on devices connected to this
+            Wi-Fi:</p>
           <div class="cds--qr-box">
-            <img id="qrCodeImage" class="cds--qr-img" src="" alt="Party Join QR Code">
+            <img id="qrCodeImage" class="cds--qr-img" src="" alt="LAN Join QR Code">
           </div>
           <div class="cds--form-item">
-            <label class="cds--label">Party Invite Link</label>
+            <label class="cds--label">Local Network URL</label>
             <div class="cds--copy-input-row">
               <input type="text" id="inputShareUrl" class="cds--text-input cds--font-mono" readonly>
               <button class="cds--btn cds--btn--primary" id="btnCopyShareUrl">Copy Link</button>
@@ -789,7 +773,8 @@
               <div class="cds--instruction-card__icon">🚀</div>
               <div class="cds--instruction-card__content">
                 <h4>1. Join or Create a Party</h4>
-                <p>Enter your <strong>Nickname</strong>, pick an avatar, and enter a <strong>Room Code</strong> (default is <code>MAIN</code>). Share the same code with your friends to watch together.</p>
+                <p>Enter your <strong>Nickname</strong>, pick an avatar, and enter a <strong>Room Code</strong> (default
+                  is <code>MAIN</code>). Share the same code with your friends to watch together.</p>
               </div>
             </div>
 
@@ -797,7 +782,9 @@
               <div class="cds--instruction-card__icon">📺</div>
               <div class="cds--instruction-card__content">
                 <h4>2. Stream Local Video or YouTube</h4>
-                <p>Click <strong>Upload</strong> to drag &amp; drop video files (<code>.mp4</code>, <code>.webm</code>, <code>.mkv</code>, <code>.mov</code>) or paste any <strong>YouTube link</strong> for synchronized streaming.</p>
+                <p>Click <strong>Upload</strong> to drag &amp; drop video files (<code>.mp4</code>, <code>.webm</code>,
+                  <code>.mkv</code>, <code>.mov</code>) or paste any <strong>YouTube link</strong> for synchronized
+                  streaming.</p>
               </div>
             </div>
 
@@ -805,7 +792,8 @@
               <div class="cds--instruction-card__icon">📱</div>
               <div class="cds--instruction-card__content">
                 <h4>3. Mobile &amp; LAN QR Joining</h4>
-                <p>Click <strong>Share QR</strong> in the top bar. Any phone or tablet on the same Wi-Fi can scan the QR code to join your stream instantly with zero setup.</p>
+                <p>Click <strong>Share QR</strong> in the top bar. Any phone or tablet on the same Wi-Fi can scan the QR
+                  code to join your stream instantly with zero setup.</p>
               </div>
             </div>
 
@@ -813,7 +801,8 @@
               <div class="cds--instruction-card__icon">🎧</div>
               <div class="cds--instruction-card__content">
                 <h4>4. Multi-Track &amp; Dubbed Audio</h4>
-                <p>Attach external dubbed audio files (<code>.mp3</code>, <code>.m4a</code>, <code>.aac</code>) from the audio selector to watch movies in your preferred language in sync.</p>
+                <p>Attach external dubbed audio files (<code>.mp3</code>, <code>.m4a</code>, <code>.aac</code>) from the
+                  audio selector to watch movies in your preferred language in sync.</p>
               </div>
             </div>
 
@@ -833,7 +822,8 @@
           </div>
         </div>
         <div class="cds--modal-footer">
-          <button class="cds--btn cds--btn--primary cds--btn--full" id="btnCloseInstructionsFooter">Got it, let's watch!</button>
+          <button class="cds--btn cds--btn--primary cds--btn--full" id="btnCloseInstructionsFooter">Got it, let's
+            watch!</button>
         </div>
       </div>
     </div>

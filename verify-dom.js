@@ -22,8 +22,7 @@ const idsToCheck = [
   'btnFullscreen', 'playStateCue', 'btnSpeedToggle', 'speedDropdownMenu', 'currentSpeedLabel',
   'btnSubtitlesToggle', 'subtitlesDropdownMenu', 'btnForceSync', 'chatMessagesContainer',
   'chatTextInput', 'chatInputForm', 'chatUnreadDot', 'reactionsContainer',
-  'btnOpenInstructionsModal', 'btnNavInstructions', 'modalInstructions', 'btnCloseInstructionsModal', 'btnCloseInstructionsFooter',
-  'tabModeCreate', 'tabModeJoin', 'btnRandomRoomCode', 'inputRoomPasskey', 'btnJoinRoomText', 'lblRoomCode', 'roomCodeRequirement'
+  'btnOpenInstructionsModal', 'btnNavInstructions', 'modalInstructions', 'btnCloseInstructionsModal', 'btnCloseInstructionsFooter'
 ];
 
 let missing = [];

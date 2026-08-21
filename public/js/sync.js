@@ -173,24 +173,37 @@ class SyncEngine {
     });
   }
 
-  // Join or Create a Room with Key Authentication
+  // Join or Create a Room with Key Authentication (Flexible Arguments)
   joinRoom(roomId, userName, userAvatar, passkey = '', hostKey = '', callback) {
+    let cb = callback;
+    let pk = passkey;
+    let hk = hostKey;
+
+    if (typeof passkey === 'function') {
+      cb = passkey;
+      pk = '';
+      hk = '';
+    } else if (typeof hostKey === 'function') {
+      cb = hostKey;
+      hk = '';
+    }
+
     this.roomId = (roomId || '').trim().toUpperCase();
     this.socket.emit('join-room', { 
       roomId: this.roomId, 
-      userName, 
-      userAvatar,
-      passkey,
-      hostKey
+      userName: (userName || 'Viewer').trim(), 
+      userAvatar: userAvatar || '🍿',
+      passkey: typeof pk === 'string' ? pk.trim() : '',
+      hostKey: typeof hk === 'string' ? hk.trim() : ''
     }, (res) => {
       if (res && res.success) {
         this.roomId = res.roomId || this.roomId;
         this.roomState = res.roomState;
         this.memberInfo = res.myMemberInfo;
         this.startPeriodicSync();
-        if (typeof callback === 'function') callback(res);
+        if (typeof cb === 'function') cb(res);
       } else {
-        if (typeof callback === 'function') callback(res || { success: false, error: 'Connection error' });
+        if (typeof cb === 'function') cb(res || { success: false, error: 'Failed to join party' });
       }
     });
   }

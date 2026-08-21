@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Modern Interactive Chromatic Fluid Mesh & Cyber Grid Background (2026 Aesthetic)
   let bgAnimId = null;
   function initLobbyBackground() {
-    if (!lobbyBgCanvas) return { start: () => {} };
+    if (!lobbyBgCanvas) return { start: () => { } };
     const ctx = lobbyBgCanvas.getContext('2d');
     let width, height;
     let mouse = { x: null, y: null, targetX: null, targetY: null, radius: 240 };
@@ -166,8 +166,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         ctx.beginPath();
         ctx.arc(ripple.x, ripple.y, ripple.radius, 0, Math.PI * 2);
-        ctx.strokeStyle = isDark 
-          ? `rgba(60, 255, 209, ${ripple.alpha * 0.8})` 
+        ctx.strokeStyle = isDark
+          ? `rgba(60, 255, 209, ${ripple.alpha * 0.8})`
           : `rgba(11, 121, 98, ${ripple.alpha * 0.8})`;
         ctx.lineWidth = 1.5;
         ctx.stroke();
@@ -237,6 +237,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnRandomRoomCode = document.getElementById('btnRandomRoomCode');
   const tabModeCreate = document.getElementById('tabModeCreate');
   const tabModeJoin = document.getElementById('tabModeJoin');
+  const btnJoinRoom = document.getElementById('btnJoinRoom');
   const btnJoinRoomText = document.getElementById('btnJoinRoomText');
   const lblRoomCode = document.getElementById('lblRoomCode');
   const roomCodeRequirement = document.getElementById('roomCodeRequirement');
@@ -432,7 +433,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // 2. Fetch Network Info & URL query params
   function loadNetworkInfo(roomId) {
     const activeRoom = roomId || currentRoomId || 'MAIN';
-    // Construct clean web share link
     const webOrigin = window.location.origin;
     let webJoinUrl = `${webOrigin}/?room=${encodeURIComponent(activeRoom)}`;
     if (activeRoomPasskey) {
@@ -526,54 +526,56 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // 4. Lobby Join / Create Room Form
-  if (joinLobbyForm) {
-    joinLobbyForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const userName = inputUserName.value.trim() || 'Viewer';
-      currentRoomId = (inputRoomCode.value.trim() || generateRandomRoomCode()).toUpperCase();
-      const passkey = inputRoomPasskey ? inputRoomPasskey.value.trim() : '';
-      activeRoomPasskey = passkey;
+  // 4. Lobby Join Room Function
+  function handleJoinParty(e) {
+    if (e) e.preventDefault();
+    const userName = (inputUserName.value || '').trim() || (lobbyMode === 'create' ? 'Host' : 'Viewer');
+    currentRoomId = ((inputRoomCode.value || '').trim() || generateRandomRoomCode()).toUpperCase();
+    const passkey = inputRoomPasskey ? inputRoomPasskey.value.trim() : '';
+    activeRoomPasskey = passkey;
 
-      sync.joinRoom(currentRoomId, userName, selectedAvatar, passkey, '', (res) => {
-        if (!res || !res.success) {
-          showToast(res?.error || 'Failed to join party. Check passkey.', 'error');
-          if (inputRoomPasskey) {
-            inputRoomPasskey.focus();
-            inputRoomPasskey.classList.add('cds--input-error');
-            setTimeout(() => inputRoomPasskey.classList.remove('cds--input-error'), 2000);
-          }
-          return;
+    sync.joinRoom(currentRoomId, userName, selectedAvatar, passkey, '', (res) => {
+      if (!res || !res.success) {
+        showToast(res?.error || 'Failed to join party. Check room code/passkey.', 'error');
+        if (inputRoomPasskey) {
+          inputRoomPasskey.focus();
+          inputRoomPasskey.classList.add('cds--input-error');
+          setTimeout(() => inputRoomPasskey.classList.remove('cds--input-error'), 2000);
         }
+        return;
+      }
 
-        lobbyView.classList.add('hidden');
-        theaterView.classList.remove('hidden');
-        navRoomControls.classList.remove('hidden');
-        navRoomCode.textContent = currentRoomId;
+      lobbyView.classList.add('hidden');
+      theaterView.classList.remove('hidden');
+      navRoomControls.classList.remove('hidden');
+      navRoomCode.textContent = currentRoomId;
 
-        const newUrl = new URL(window.location.href);
-        newUrl.searchParams.set('room', currentRoomId);
-        if (passkey) {
-          newUrl.searchParams.set('key', passkey);
-        } else {
-          newUrl.searchParams.delete('key');
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.set('room', currentRoomId);
+      if (passkey) {
+        newUrl.searchParams.set('key', passkey);
+      } else {
+        newUrl.searchParams.delete('key');
+      }
+      window.history.pushState({}, '', newUrl);
+
+      loadNetworkInfo(currentRoomId);
+
+      if (res.roomState && res.roomState.video) {
+        player.loadVideo(res.roomState.video);
+        player.seekTo(res.roomState.playback.currentTime, false);
+        if (res.roomState.playback.isPlaying) {
+          player.play(false);
         }
-        window.history.pushState({}, '', newUrl);
+      }
 
-        loadNetworkInfo(currentRoomId);
-
-        if (res.roomState && res.roomState.video) {
-          player.loadVideo(res.roomState.video);
-          player.seekTo(res.roomState.playback.currentTime, false);
-          if (res.roomState.playback.isPlaying) {
-            player.play(false);
-          }
-        }
-
-        const roleText = res.myMemberInfo?.isHost ? '👑 Host' : 'Viewer';
-        showToast(`Joined party room ${currentRoomId} (${roleText})`, 'success');
-      });
+      const roleText = res.myMemberInfo?.isHost ? '👑 Host' : 'Viewer';
+      showToast(`Joined party room ${currentRoomId} (${roleText})`, 'success');
     });
+  }
+
+  if (joinLobbyForm) {
+    joinLobbyForm.addEventListener('submit', handleJoinParty);
   }
 
   // 5. Sidebar Tabs & Mobile Toggle
