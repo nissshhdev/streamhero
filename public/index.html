@@ -269,7 +269,9 @@
           </video>
 
           <!-- YouTube IFrame Player Container -->
-          <div id="youtubePlayer" class="cds--youtube-player hidden"></div>
+          <div id="youtubePlayerWrap" class="cds--youtube-player hidden">
+            <div id="youtubePlayer"></div>
+          </div>
 
           <!-- Synchronized Secondary Language Audio Track Element -->
           <audio id="secondaryAudio" class="hidden" preload="auto"></audio>
@@ -834,6 +836,7 @@
   </div>
 
   <!-- Scripts -->
+  <script src="https://www.youtube.com/iframe_api"></script>
   <script src="/js/reactions.js"></script>
   <script src="/js/chat.js"></script>
   <script src="/js/sync.js"></script>

@@ -451,63 +451,126 @@ class CinePlayer {
   // Load YouTube Video
   loadYouTube(youtubeId, title = 'YouTube Stream') {
     this.isYouTube = true;
+    this.currentVideoData = {
+      type: 'youtube',
+      youtubeId,
+      name: title,
+      url: `https://www.youtube.com/watch?v=${youtubeId}`
+    };
     this.emptyState.classList.add('hidden');
     this.video.classList.add('hidden');
-    this.video.pause();
+    try { this.video.pause(); } catch(e) {}
     this.resetAudioTracks();
 
     this.videoActiveTitle.textContent = title;
-    if (this.youtubeContainer) this.youtubeContainer.classList.remove('hidden');
+    const wrap = document.getElementById('youtubePlayerWrap') || this.youtubeContainer;
+    if (wrap) wrap.classList.remove('hidden');
+
+    const startYt = () => {
+      this.initYouTubePlayer(youtubeId);
+    };
 
     if (window.YT && window.YT.Player) {
-      this.initYouTubePlayer(youtubeId);
+      startYt();
     } else {
+      if (!document.getElementById('ytIframeScript')) {
+        const tag = document.createElement('script');
+        tag.id = 'ytIframeScript';
+        tag.src = 'https://www.youtube.com/iframe_api';
+        const firstScriptTag = document.getElementsByTagName('script')[0];
+        if (firstScriptTag && firstScriptTag.parentNode) {
+          firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+        } else {
+          document.head.appendChild(tag);
+        }
+      }
+      const prevReady = window.onYouTubeIframeAPIReady;
       window.onYouTubeIframeAPIReady = () => {
-        this.initYouTubePlayer(youtubeId);
+        if (typeof prevReady === 'function') prevReady();
+        startYt();
       };
+      // Fallback check interval in case event fired already
+      const checkYt = setInterval(() => {
+        if (window.YT && window.YT.Player) {
+          clearInterval(checkYt);
+          startYt();
+        }
+      }, 200);
+      setTimeout(() => clearInterval(checkYt), 10000);
     }
   }
 
   initYouTubePlayer(youtubeId) {
     if (this.ytPlayer && typeof this.ytPlayer.loadVideoById === 'function') {
-      this.ytPlayer.loadVideoById(youtubeId);
-      this.ytPlayer.playVideo();
+      try {
+        this.ytPlayer.loadVideoById({
+          videoId: youtubeId,
+          startSeconds: 0
+        });
+        this.ytPlayer.playVideo();
+        this.updatePlayPauseUI(true);
+      } catch (e) {
+        console.warn('YouTube loadVideoById error:', e);
+      }
     } else if (window.YT && window.YT.Player) {
-      this.ytPlayer = new YT.Player('youtubePlayer', {
-        height: '100%',
-        width: '100%',
-        videoId: youtubeId,
-        playerVars: {
-          autoplay: 1,
-          controls: 1,
-          rel: 0,
-          modestbranding: 1
-        },
-        events: {
-          onReady: (event) => {
-            event.target.playVideo();
+      try {
+        this.ytPlayer = new YT.Player('youtubePlayer', {
+          height: '100%',
+          width: '100%',
+          videoId: youtubeId,
+          playerVars: {
+            autoplay: 1,
+            controls: 1,
+            rel: 0,
+            modestbranding: 1,
+            enablejsapi: 1,
+            origin: window.location.origin
           },
-          onStateChange: (event) => {
-            if (event.data === YT.PlayerState.PLAYING) {
+          events: {
+            onReady: (event) => {
+              event.target.playVideo();
               this.updatePlayPauseUI(true);
-              this.onUserPlay(this.ytPlayer.getCurrentTime());
-            } else if (event.data === YT.PlayerState.PAUSED) {
-              this.updatePlayPauseUI(false);
-              this.onUserPause(this.ytPlayer.getCurrentTime());
+            },
+            onStateChange: (event) => {
+              if (event.data === YT.PlayerState.PLAYING) {
+                this.updatePlayPauseUI(true);
+                this.onUserPlay(this.ytPlayer.getCurrentTime ? this.ytPlayer.getCurrentTime() : 0);
+              } else if (event.data === YT.PlayerState.PAUSED) {
+                this.updatePlayPauseUI(false);
+                this.onUserPause(this.ytPlayer.getCurrentTime ? this.ytPlayer.getCurrentTime() : 0);
+              }
             }
           }
-        }
-      });
+        });
+      } catch (err) {
+        console.error('Failed to create YouTube player:', err);
+      }
     }
   }
 
-  // Load a new video source
+  // Load a new video source (Local Video or YouTube)
   loadVideo(videoData) {
+    if (!videoData) return;
+
+    // Check if YouTube format
+    const isYt = videoData.type === 'youtube' || videoData.youtubeId || (videoData.url && (videoData.url.includes('youtube.com') || videoData.url.includes('youtu.be')));
+    if (isYt) {
+      let ytId = videoData.youtubeId;
+      if (!ytId && videoData.url) {
+        const match = videoData.url.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/);
+        if (match && match[2].length === 11) ytId = match[2];
+      }
+      if (ytId) {
+        return this.loadYouTube(ytId, videoData.name || `YouTube Stream (${ytId})`);
+      }
+    }
+
     this.isYouTube = false;
     if (this.ytPlayer && typeof this.ytPlayer.pauseVideo === 'function') {
       try { this.ytPlayer.pauseVideo(); } catch (e) {}
     }
-    if (this.youtubeContainer) this.youtubeContainer.classList.add('hidden');
+    const wrap = document.getElementById('youtubePlayerWrap') || this.youtubeContainer;
+    if (wrap) wrap.classList.add('hidden');
     this.video.classList.remove('hidden');
 
     this.currentVideoData = videoData;

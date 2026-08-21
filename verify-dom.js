@@ -22,7 +22,8 @@ const idsToCheck = [
   'btnFullscreen', 'playStateCue', 'btnSpeedToggle', 'speedDropdownMenu', 'currentSpeedLabel',
   'btnSubtitlesToggle', 'subtitlesDropdownMenu', 'btnForceSync', 'chatMessagesContainer',
   'chatTextInput', 'chatInputForm', 'chatUnreadDot', 'reactionsContainer',
-  'btnOpenInstructionsModal', 'btnNavInstructions', 'modalInstructions', 'btnCloseInstructionsModal', 'btnCloseInstructionsFooter'
+  'btnOpenInstructionsModal', 'btnNavInstructions', 'modalInstructions', 'btnCloseInstructionsModal', 'btnCloseInstructionsFooter',
+  'youtubePlayer', 'youtubePlayerWrap', 'modalYouTube', 'btnYouTubeModalNav', 'btnYouTubeModalEmpty', 'btnCloseYouTubeModal', 'btnCancelYouTube', 'inputYouTubeUrl', 'youTubeThumbnail', 'youTubePreviewTitle', 'btnStartYouTube'
 ];
 
 let missing = [];

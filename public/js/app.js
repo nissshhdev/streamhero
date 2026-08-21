@@ -1125,8 +1125,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function extractYouTubeId(url) {
     if (!url) return null;
-    const match = url.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/);
-    return (match && match[2].length === 11) ? match[2] : null;
+    const cleanUrl = url.trim();
+    // Match standard watch, share, short, embed, or shorts URLs
+    const match = cleanUrl.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|shorts\/))([\w-]{11})/i);
+    if (match && match[1]) return match[1];
+    if (/^[\w-]{11}$/.test(cleanUrl)) return cleanUrl;
+    return null;
   }
 
   function openYouTubeModal() {
